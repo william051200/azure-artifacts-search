@@ -134,29 +134,32 @@ class ArtifactSearchApp(tk.Tk):
         row2.pack(fill="x")
 
         self.include_build_var = tk.BooleanVar(value=True)
-        tk.Checkbutton(
+        self.include_build_cb = tk.Checkbutton(
             row2, text="Include per-build feeds", variable=self.include_build_var,
             font=FONT_SANS_SM, bg=IVORY, fg=OLIVE_GRAY,
             activebackground=IVORY, selectcolor=WARM_SAND,
-        ).pack(side="left")
+        )
+        self.include_build_cb.pack(side="left")
 
         self.contains_match_var = tk.BooleanVar(value=True)
-        tk.Checkbutton(
+        self.contains_match_cb = tk.Checkbutton(
             row2, text="Contains match", variable=self.contains_match_var,
             font=FONT_SANS_SM, bg=IVORY, fg=OLIVE_GRAY,
             activebackground=IVORY, selectcolor=WARM_SAND,
-        ).pack(side="left", padx=(12, 0))
+        )
+        self.contains_match_cb.pack(side="left", padx=(12, 0))
 
         tk.Label(
             row2, text="Threads:", font=FONT_SANS_SM,
             bg=IVORY, fg=STONE_GRAY,
         ).pack(side="left", padx=(16, 4))
         self.thread_var = tk.StringVar(value="8")
-        tk.Spinbox(
+        self.thread_spin = tk.Spinbox(
             row2, from_=1, to=32, textvariable=self.thread_var,
             width=4, font=FONT_SANS_SM, bg=WHITE, fg=NEAR_BLACK,
             relief="flat", highlightbackground=BORDER_WARM, highlightthickness=1,
-        ).pack(side="left")
+        )
+        self.thread_spin.pack(side="left")
 
         self.cancel_btn = tk.Button(
             row2, text="Cancel", font=("Segoe UI", 11, "bold"),
@@ -327,6 +330,15 @@ class ArtifactSearchApp(tk.Tk):
 
     # ── Search actions ──
 
+    def _set_inputs_state(self, state: str):
+        """Enable or disable all input fields. state is 'normal' or 'disabled'."""
+        for widget in (
+            self.version_entry, self.feed_entry,
+            self.include_build_cb, self.contains_match_cb,
+            self.thread_spin, self.config_btn,
+        ):
+            widget.config(state=state)
+
     def _on_search(self):
         version = self.version_entry.get().strip()
         if not version or self._searching:
@@ -335,6 +347,7 @@ class ArtifactSearchApp(tk.Tk):
         self._cancel = False
         self.search_btn.config(state="disabled")
         self.cancel_btn.config(state="normal")
+        self._set_inputs_state("disabled")
         for item in self.tree.get_children():
             self.tree.delete(item)
         self.count_label.config(text="")
@@ -449,5 +462,6 @@ class ArtifactSearchApp(tk.Tk):
         )
         self.search_btn.config(state="normal")
         self.cancel_btn.config(state="disabled")
+        self._set_inputs_state("normal")
         self._searching = False
         self._cancel = False
