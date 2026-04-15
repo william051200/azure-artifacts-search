@@ -45,7 +45,8 @@ class ArtifactSearchApp(tk.Tk):
         self.org = os.getenv("AZURE_DEVOPS_ORG", ORG)
         self.project = os.getenv("AZURE_DEVOPS_PROJECT", PROJECT)
         self.api_version = API_VERSION
-        self.pat = os.getenv("AZURE_DEVOPS_PAT", "")
+        pat_env = os.getenv("AZURE_DEVOPS_PAT", "")
+        self.pat = "" if pat_env.startswith("<") else pat_env
 
         self._build_ui()
 
