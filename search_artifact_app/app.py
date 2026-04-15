@@ -2,6 +2,7 @@
 
 import base64
 import datetime
+import os
 import threading
 import webbrowser
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -9,6 +10,7 @@ from tkinter import ttk
 import tkinter as tk
 
 import requests
+from dotenv import load_dotenv
 
 from search_artifact_app.config import (
     ORG, PROJECT, API_VERSION,
@@ -36,11 +38,14 @@ class ArtifactSearchApp(tk.Tk):
         self._searching = False
         self._cancel = False
 
-        # Editable config
-        self.org = ORG
-        self.project = PROJECT
+        # Load .env file if present
+        load_dotenv()
+
+        # Editable config — prefer .env values, fall back to defaults
+        self.org = os.getenv("AZURE_DEVOPS_ORG", ORG)
+        self.project = os.getenv("AZURE_DEVOPS_PROJECT", PROJECT)
         self.api_version = API_VERSION
-        self.pat = ""
+        self.pat = os.getenv("AZURE_DEVOPS_PAT", "")
 
         self._build_ui()
 
