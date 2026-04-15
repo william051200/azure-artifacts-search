@@ -290,7 +290,7 @@ class ArtifactSearchApp(tk.Tk):
         footer = tk.Frame(self, bg=PARCHMENT, pady=6)
         footer.pack(fill="x")
         tk.Label(
-            footer, text="Azure Artifacts Search  ·  dnceng/public",
+            footer, text="Double-click a result to open it in Azure DevOps  ·  Azure Artifacts Search",
             font=FONT_SANS_LABEL, bg=PARCHMENT, fg=STONE_GRAY,
         ).pack()
 
