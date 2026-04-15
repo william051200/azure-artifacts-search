@@ -2,23 +2,15 @@
 
 Search across Azure DevOps Artifacts feeds for packages by version.
 
-## Setup
+## Setup & Run
 
-```bash
-git clone https://github.com/william051200/azure-artifacts-search.git
-cd azure-artifacts-search
-pip install -r requirements.txt
-```
+**Option 1 — Quick start (requires Python):**
+Double-click **`run.bat`** — it installs dependencies and launches the app automatically.
 
-For private feeds, copy `.env.example` to `.env` and add your PAT — or set it in **⚙ Settings** inside the app.
+**Option 2 — Standalone .exe (no Python needed):**
+Run **`build.bat`** once to create `dist\AzureArtifactsSearch.exe`, then share/run that file anywhere.
 
-## Run
-
-Double-click **`run.bat`** (Windows), or:
-
-```bash
-python -m search_artifact_app
-```
+For private feeds, set your PAT in **⚙ Settings** inside the app.
 
 1. Enter a version (e.g. `13.2.0`)
 2. Click **Search**
