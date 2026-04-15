@@ -417,45 +417,50 @@ class ArtifactSearchApp(tk.Tk):
                 base_url, api_ver,
             )
 
-        with ThreadPoolExecutor(max_workers=max_workers) as executor:
-            future_to_feed = {executor.submit(_search_one_feed, f): f for f in feeds}
-            cancelled = False
-            for future in as_completed(future_to_feed):
-                if self._cancel:
-                    executor.shutdown(wait=False, cancel_futures=True)
-                    self._log("Search cancelled.", "warn")
-                    cancelled = True
-                    break
+        cancelled = False
+        try:
+            with ThreadPoolExecutor(max_workers=max_workers) as executor:
+                future_to_feed = {executor.submit(_search_one_feed, f): f for f in feeds}
+                for future in as_completed(future_to_feed):
+                    if self._cancel:
+                        for f in future_to_feed:
+                            f.cancel()
+                        self._log("Search cancelled.", "warn")
+                        cancelled = True
+                        break
 
-                feed = future_to_feed[future]
-                fname = feed["name"]
-                with lock:
-                    completed[0] += 1
-                    idx = completed[0]
-
-                self.after(0, lambda n=fname, i=idx: self.status_var.set(
-                    f"[{i}/{total}]  {n}"
-                ))
-
-                try:
-                    matches = future.result()
-                except Exception as exc:
-                    self._log(f"Error searching feed '{fname}': {exc}", "error")
-                    matches = []
-
-                if matches:
+                    feed = future_to_feed[future]
+                    fname = feed["name"]
                     with lock:
-                        all_matches.extend(matches)
-                    for m in matches:
-                        row = (m["feed"], m["type"], m["name"], m["version"],
-                               "✓" if m["isLatest"] else "")
-                        self.after(0, lambda r=row: self.tree.insert("", "end", values=r))
-                        self._log(f"  ✓ [{m['feed']}] {m['type']}  {m['name']}", "success")
-                    with lock:
-                        count = len(all_matches)
-                    self.after(0, lambda c=count: self.count_label.config(
-                        text=f"{c} match{'es' if c != 1 else ''}"
+                        completed[0] += 1
+                        idx = completed[0]
+
+                    self.after(0, lambda n=fname, i=idx: self.status_var.set(
+                        f"[{i}/{total}]  {n}"
                     ))
+
+                    try:
+                        matches = future.result()
+                    except Exception as exc:
+                        self._log(f"Error searching feed '{fname}': {exc}", "error")
+                        matches = []
+
+                    if matches:
+                        with lock:
+                            all_matches.extend(matches)
+                        for m in matches:
+                            row = (m["feed"], m["type"], m["name"], m["version"],
+                                   "✓" if m["isLatest"] else "")
+                            self.after(0, lambda r=row: self.tree.insert("", "end", values=r))
+                            self._log(f"  ✓ [{m['feed']}] {m['type']}  {m['name']}", "success")
+                        with lock:
+                            count = len(all_matches)
+                        self.after(0, lambda c=count: self.count_label.config(
+                            text=f"{c} match{'es' if c != 1 else ''}"
+                        ))
+        except Exception as e:
+            self._log(f"Search error: {e}", "error")
+            cancelled = True
 
         if cancelled:
             msg = "Search cancelled."
