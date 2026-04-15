@@ -14,6 +14,8 @@ For private feeds, copy `.env.example` to `.env` and add your PAT — or set it 
 
 ## Run
 
+Double-click **`run.bat`** (Windows), or:
+
 ```bash
 python -m search_artifact_app
 ```
