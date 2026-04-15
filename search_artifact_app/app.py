@@ -419,12 +419,13 @@ class ArtifactSearchApp(tk.Tk):
 
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
             future_to_feed = {executor.submit(_search_one_feed, f): f for f in feeds}
+            cancelled = False
             for future in as_completed(future_to_feed):
                 if self._cancel:
                     executor.shutdown(wait=False, cancel_futures=True)
                     self._log("Search cancelled.", "warn")
-                    self.after(0, lambda: self._finish_search("Search cancelled.", all_matches))
-                    return
+                    cancelled = True
+                    break
 
                 feed = future_to_feed[future]
                 fname = feed["name"]
@@ -456,9 +457,14 @@ class ArtifactSearchApp(tk.Tk):
                         text=f"{c} match{'es' if c != 1 else ''}"
                     ))
 
-        msg = (f"Done — {len(all_matches)} match(es) across {total} feeds."
-               if all_matches else f"No packages found with version {version}.")
-        self._log(msg, "success" if all_matches else "warn")
+        if cancelled:
+            msg = "Search cancelled."
+        elif all_matches:
+            msg = f"Done — {len(all_matches)} match(es) across {total} feeds."
+            self._log(msg, "success")
+        else:
+            msg = f"No packages found with version {version}."
+            self._log(msg, "warn")
         self.after(0, lambda: self._finish_search(msg, all_matches))
 
     def _finish_search(self, msg: str, matches: list):
