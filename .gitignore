@@ -1,6 +1,7 @@
-__pycache__
-venv
+__pycache__/
+venv/
 .env
 build/
 dist/
 *.spec
+*.drawio
