@@ -37,6 +37,7 @@ class ArtifactSearchApp(tk.Tk):
 
         self._searching = False
         self._cancel = False
+        self._session = None  # active requests.Session for cancellation
 
         # Load .env file if present
         load_dotenv()
@@ -366,6 +367,12 @@ class ArtifactSearchApp(tk.Tk):
         self.status_var.set("Cancelling...")
         self.cancel_btn.config(state="disabled")
         self._log("Cancellation requested.", "warn")
+        # Close the HTTP session to abort in-flight requests immediately
+        if self._session:
+            try:
+                self._session.close()
+            except Exception:
+                pass
 
     def _search_thread(self, version: str):
         feed_filter = self.feed_entry.get().strip() or None
@@ -379,12 +386,20 @@ class ArtifactSearchApp(tk.Tk):
         if self.pat:
             token = base64.b64encode(f":{self.pat}".encode()).decode()
             session.headers["Authorization"] = f"Basic {token}"
+        self._session = session
 
         try:
             self._log("Fetching feed list from Azure DevOps...")
             feeds = get_feeds(session, base_url, api_ver)
             self._log(f"Retrieved {len(feeds)} total feeds.", "success")
+        except PermissionError as e:
+            self._log(str(e), "error")
+            self.after(0, lambda: self._finish_search(str(e), []))
+            return
         except Exception as e:
+            if self._cancel:
+                self.after(0, lambda: self._finish_search("Search cancelled.", []))
+                return
             self._log(f"Error fetching feeds: {e}", "error")
             self.after(0, lambda: self._finish_search(f"Error fetching feeds: {e}", []))
             return
@@ -425,6 +440,7 @@ class ArtifactSearchApp(tk.Tk):
                     if self._cancel:
                         for f in future_to_feed:
                             f.cancel()
+                        executor.shutdown(wait=False, cancel_futures=True)
                         self._log("Search cancelled.", "warn")
                         cancelled = True
                         break
@@ -442,6 +458,10 @@ class ArtifactSearchApp(tk.Tk):
                     try:
                         matches = future.result()
                     except Exception as exc:
+                        # Suppress errors caused by cancellation
+                        if self._cancel:
+                            cancelled = True
+                            break
                         self._log(f"Error searching feed '{fname}': {exc}", "error")
                         matches = []
 
@@ -459,7 +479,8 @@ class ArtifactSearchApp(tk.Tk):
                             text=f"{c} match{'es' if c != 1 else ''}"
                         ))
         except Exception as e:
-            self._log(f"Search error: {e}", "error")
+            if not self._cancel:
+                self._log(f"Search error: {e}", "error")
             cancelled = True
 
         if cancelled:
@@ -482,3 +503,4 @@ class ArtifactSearchApp(tk.Tk):
         self._set_inputs_state("normal")
         self._searching = False
         self._cancel = False
+        self._session = None

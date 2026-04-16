@@ -1,5 +1,6 @@
 """Settings popup dialog."""
 
+import os
 import tkinter as tk
 
 from search_artifact_app.theme import (
@@ -89,6 +90,22 @@ def open_settings(parent) -> None:
         parent.api_version = api_entry.get().strip() or parent.api_version
         parent.pat = pat_entry.get().strip()
         parent.nav_label.config(text=f"{parent.org} / {parent.project}")
+
+        # Persist settings to the .env file
+        env_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env")
+        lines = [
+            "# Azure DevOps Personal Access Token\n",
+            f"AZURE_DEVOPS_PAT={parent.pat}\n",
+            "\n",
+            "# Azure DevOps Organization Name (change this to your org)\n",
+            f"AZURE_DEVOPS_ORG={parent.org}\n",
+            "\n",
+            "# Azure DevOps Project Name\n",
+            f"AZURE_DEVOPS_PROJECT={parent.project}\n",
+        ]
+        with open(env_path, "w", encoding="utf-8") as f:
+            f.writelines(lines)
+
         popup.destroy()
 
     tk.Button(

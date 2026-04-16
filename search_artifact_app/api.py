@@ -28,8 +28,19 @@ def get_feeds(
         url = f"{base_url}/feeds"
         params = {"api-version": api_version, "$top": top, "$skip": skip}
         resp = session.get(url, params=params, timeout=30)
+        if resp.status_code in (401, 403):
+            raise PermissionError(
+                "Authentication failed — check your Personal Access Token (PAT) "
+                "and ensure it has the Packaging (Read) scope."
+            )
         resp.raise_for_status()
-        data = resp.json()
+        try:
+            data = resp.json()
+        except ValueError:
+            raise ValueError(
+                "Unexpected response from Azure DevOps (not JSON). "
+                "Verify your Organization, Project, and PAT are correct."
+            )
         feeds = data.get("value", [])
         if not feeds:
             break
