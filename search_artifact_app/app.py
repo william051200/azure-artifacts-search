@@ -58,8 +58,8 @@ class ArtifactSearchApp(tk.Tk):
         self._searching = False
         self._cancel = False
         self._session = None
-
-        load_dotenv()
+        self._cached_feeds: list[dict] = []
+        self._feeds_loaded = False
 
         self.org = os.getenv("AZURE_DEVOPS_ORG", ORG)
         self.project = os.getenv("AZURE_DEVOPS_PROJECT", PROJECT)
@@ -68,6 +68,7 @@ class ArtifactSearchApp(tk.Tk):
         self.pat = "" if pat_env.startswith("<") else pat_env
 
         self._build_ui()
+        self._prefetch_feeds()
 
     # ── UI Construction ──
 
@@ -377,6 +378,37 @@ class ArtifactSearchApp(tk.Tk):
 
     # ── Search actions ──
 
+    def _make_session(self, pat: str) -> requests.Session:
+        """Create an authenticated requests session."""
+        session = requests.Session()
+        session.headers["Accept"] = "application/json"
+        if pat:
+            token = base64.b64encode(f":{pat}".encode()).decode()
+            session.headers["Authorization"] = f"Basic {token}"
+        return session
+
+    def _prefetch_feeds(self):
+        """Fetch feed list in background on startup so searches don't wait."""
+        self.status_var.set("Loading feeds...")
+        self._log("Prefetching feed list on startup...")
+
+        def _fetch():
+            base_url = build_base_url(self.org, self.project)
+            session = self._make_session(self.pat)
+            try:
+                feeds = get_feeds(session, base_url, self.api_version)
+                self._cached_feeds = feeds
+                self._feeds_loaded = True
+                self._log(f"Feed cache ready — {len(feeds)} feeds loaded.", "success")
+                self.after(0, lambda: self.status_var.set(f"Ready — {len(feeds)} feeds cached"))
+            except Exception as e:
+                self._log(f"Prefetch failed: {e}. Feeds will be fetched on first search.", "warn")
+                self.after(0, lambda: self.status_var.set("Ready (feeds not cached)"))
+            finally:
+                session.close()
+
+        threading.Thread(target=_fetch, daemon=True).start()
+
     def _set_inputs_state(self, state: str):
         """Enable or disable all input fields."""
         for widget in (
@@ -417,7 +449,7 @@ class ArtifactSearchApp(tk.Tk):
         for item in self.tree.get_children():
             self.tree.delete(item)
         self.count_label.config(text="")
-        self.status_var.set("Fetching feeds...")
+        self.status_var.set("Searching..." if self._feeds_loaded else "Fetching feeds...")
         self._log(f"Starting search for version '{version}'...")
         threading.Thread(target=self._search_thread, args=(params,), daemon=True).start()
 
@@ -449,28 +481,30 @@ class ArtifactSearchApp(tk.Tk):
         return feeds
 
     def _search_thread(self, params: SearchParams):
-        session = requests.Session()
-        session.headers["Accept"] = "application/json"
-        if params.pat:
-            token = base64.b64encode(f":{params.pat}".encode()).decode()
-            session.headers["Authorization"] = f"Basic {token}"
+        session = self._make_session(params.pat)
         self._session = session
 
-        try:
-            self._log("Fetching feed list from Azure DevOps...")
-            feeds = get_feeds(session, params.base_url, params.api_version)
-            self._log(f"Retrieved {len(feeds)} total feeds.", "success")
-        except PermissionError as e:
-            self._log(str(e), "error")
-            self.after(0, lambda: self._finish_search(str(e), []))
-            return
-        except Exception as e:
-            if self._cancel:
-                self.after(0, lambda: self._finish_search("Search cancelled.", []))
+        if self._feeds_loaded:
+            feeds = list(self._cached_feeds)
+            self._log(f"Using cached feed list ({len(feeds)} feeds).", "success")
+        else:
+            try:
+                self._log("Fetching feed list from Azure DevOps...")
+                feeds = get_feeds(session, params.base_url, params.api_version)
+                self._cached_feeds = feeds
+                self._feeds_loaded = True
+                self._log(f"Retrieved {len(feeds)} total feeds.", "success")
+            except PermissionError as e:
+                self._log(str(e), "error")
+                self.after(0, lambda: self._finish_search(str(e), []))
                 return
-            self._log(f"Error fetching feeds: {e}", "error")
-            self.after(0, lambda: self._finish_search(f"Error fetching feeds: {e}", []))
-            return
+            except Exception as e:
+                if self._cancel:
+                    self.after(0, lambda: self._finish_search("Search cancelled.", []))
+                    return
+                self._log(f"Error fetching feeds: {e}", "error")
+                self.after(0, lambda: self._finish_search(f"Error fetching feeds: {e}", []))
+                return
 
         feeds = self._filter_feeds(feeds, params)
         total = len(feeds)
