@@ -17,7 +17,7 @@ from search_artifact_app.config import (
     ORG, PROJECT, API_VERSION,
     build_base_url, build_artifact_url, PROTOCOL_TYPE_MAP,
     DEFAULT_VERSION, DEFAULT_THREADS, DEFAULT_PLATFORM, PLATFORM_OPTIONS,
-    WINDOW_SIZE, WINDOW_MIN_SIZE,
+    WINDOW_SIZE, WINDOW_MIN_SIZE, APP_VERSION,
 )
 from search_artifact_app.theme import (
     PARCHMENT, IVORY, WHITE, WARM_SAND, NEAR_BLACK, DARK_SURFACE,
@@ -339,7 +339,8 @@ class ArtifactSearchApp(tk.Tk):
         footer = tk.Frame(self, bg=PARCHMENT, pady=6)
         footer.pack(fill="x")
         tk.Label(
-            footer, text="Double-click a result to open it in Azure DevOps  ·  ArtifactLens",
+            footer,
+            text=f"Double-click a result to open package in Azure DevOps  ·  ArtifactLens v{APP_VERSION}",
             font=FONT_SANS_LABEL, bg=PARCHMENT, fg=STONE_GRAY,
         ).pack()
 
