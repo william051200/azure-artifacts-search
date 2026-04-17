@@ -68,6 +68,7 @@ class ArtifactSearchApp(tk.Tk):
         self.pat = "" if pat_env.startswith("<") else pat_env
 
         self._build_ui()
+        self._center_window()
         self._prefetch_feeds()
 
     # ── UI Construction ──
@@ -79,6 +80,16 @@ class ArtifactSearchApp(tk.Tk):
         self._build_status_bar()
         self._build_main_paned()
         self._build_footer()
+
+    def _center_window(self):
+        """Center the window on screen, accounting for taskbar."""
+        self.update_idletasks()
+        w, h = self.winfo_width(), self.winfo_height()
+        screen_w = self.winfo_screenwidth()
+        screen_h = self.winfo_screenheight()
+        x = (screen_w - w) // 2
+        y = (screen_h - h) // 2
+        self.geometry(f"{w}x{h}+{x}+{y}")
 
     def _build_nav(self):
         nav = tk.Frame(self, bg=NEAR_BLACK, height=52)
