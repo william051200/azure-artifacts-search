@@ -119,7 +119,7 @@ class ArtifactSearchApp(tk.Tk):
             insertbackground=NEAR_BLACK,
         )
         self.version_entry.pack(fill="x", ipady=6, pady=(4, 0))
-        self.version_entry.insert(0, "36.1.35")
+        self.version_entry.insert(0, "26.2.10196")
         self.version_entry.bind("<Return>", lambda _: self._on_search())
 
         feed_frame = tk.Frame(row1, bg=IVORY)
