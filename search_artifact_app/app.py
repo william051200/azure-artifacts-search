@@ -60,6 +60,7 @@ class ArtifactSearchApp(tk.Tk):
         self._session = None
         self._cached_feeds: list[dict] = []
         self._feeds_loaded = False
+        self._feeds_loading = threading.Event()
 
         self.org = os.getenv("AZURE_DEVOPS_ORG", ORG)
         self.project = os.getenv("AZURE_DEVOPS_PROJECT", PROJECT)
@@ -78,8 +79,8 @@ class ArtifactSearchApp(tk.Tk):
         self._build_hero()
         self._build_input_card()
         self._build_status_bar()
-        self._build_main_paned()
         self._build_footer()
+        self._build_main_paned()
 
     def _center_window(self):
         """Center the window on screen, accounting for taskbar."""
@@ -217,7 +218,7 @@ class ArtifactSearchApp(tk.Tk):
         self.thread_spin.pack(side="left")
 
         self.cancel_btn = tk.Button(
-            row2, text="Cancel", font=FONT_SANS_BTN,
+            row2, text="Stop", font=FONT_SANS_BTN,
             bg=WARM_SAND, fg=CHARCOAL_WARM, relief="flat",
             activebackground="#dfdbd0", cursor="hand2",
             padx=16, pady=6, state="disabled",
@@ -348,8 +349,8 @@ class ArtifactSearchApp(tk.Tk):
         return outer
 
     def _build_footer(self):
-        footer = tk.Frame(self, bg=PARCHMENT, pady=6)
-        footer.pack(fill="x")
+        footer = tk.Frame(self, bg=PARCHMENT, pady=8)
+        footer.pack(side="bottom", fill="x")
         tk.Label(
             footer,
             text=f"Double-click a result to open package in Azure DevOps  ·  ArtifactLens v{APP_VERSION}",
@@ -402,6 +403,7 @@ class ArtifactSearchApp(tk.Tk):
         """Fetch feed list in background on startup so searches don't wait."""
         self.status_var.set("Loading feeds...")
         self._log("Prefetching feed list on startup...")
+        self._feeds_loading.clear()
 
         def _fetch():
             base_url = build_base_url(self.org, self.project)
@@ -416,6 +418,7 @@ class ArtifactSearchApp(tk.Tk):
                 self._log(f"Prefetch failed: {e}. Feeds will be fetched on first search.", "warn")
                 self.after(0, lambda: self.status_var.set("Ready (feeds not cached)"))
             finally:
+                self._feeds_loading.set()
                 session.close()
 
         threading.Thread(target=_fetch, daemon=True).start()
@@ -492,6 +495,12 @@ class ArtifactSearchApp(tk.Tk):
         return feeds
 
     def _search_thread(self, params: SearchParams):
+        # Wait for prefetch to complete if still in progress
+        if not self._feeds_loading.is_set():
+            self._log("Waiting for feed list to finish loading...")
+            self.after(0, lambda: self.status_var.set("Waiting for feeds to load..."))
+            self._feeds_loading.wait()
+
         session = self._make_session(params.pat)
         self._session = session
 
