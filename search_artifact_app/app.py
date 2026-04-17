@@ -17,7 +17,7 @@ from search_artifact_app.config import (
     ORG, PROJECT, API_VERSION,
     build_base_url, build_artifact_url, PROTOCOL_TYPE_MAP,
     DEFAULT_VERSION, DEFAULT_THREADS, DEFAULT_PLATFORM, PLATFORM_OPTIONS,
-    WINDOW_SIZE, WINDOW_MIN_SIZE, APP_VERSION,
+    WINDOW_SIZE, WINDOW_MIN_SIZE, APP_VERSION, MAX_THREADS,
 )
 from search_artifact_app.theme import (
     PARCHMENT, IVORY, WHITE, WARM_SAND, NEAR_BLACK, DARK_SURFACE,
@@ -211,7 +211,7 @@ class ArtifactSearchApp(tk.Tk):
         ).pack(side="left", padx=(16, 4))
         self.thread_var = tk.StringVar(value=str(DEFAULT_THREADS))
         self.thread_spin = tk.Spinbox(
-            row2, from_=1, to=32, textvariable=self.thread_var,
+            row2, from_=1, to=MAX_THREADS, textvariable=self.thread_var,
             width=4, font=FONT_SANS_SM, bg=WHITE, fg=NEAR_BLACK,
             relief="flat", highlightbackground=BORDER_WARM, highlightthickness=1,
         )
@@ -445,7 +445,7 @@ class ArtifactSearchApp(tk.Tk):
             base_url=build_base_url(self.org, self.project),
             api_version=self.api_version,
             pat=self.pat,
-            max_workers=max(1, min(32, int(self.thread_var.get()))),
+            max_workers=max(1, min(MAX_THREADS, int(self.thread_var.get()))),
         )
 
     def _on_search(self):

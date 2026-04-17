@@ -6,7 +6,10 @@ API_VERSION = "7.1-preview.1"
 
 # ── App defaults ──
 DEFAULT_VERSION = "26.2.10196"
-DEFAULT_THREADS = 8
+import os
+
+DEFAULT_THREADS = os.cpu_count() or 8
+MAX_THREADS = DEFAULT_THREADS
 DEFAULT_PLATFORM = "Android"
 PLATFORM_OPTIONS = ["No filter", "Android", "MacIOS"]
 WINDOW_SIZE = "1200x720"
