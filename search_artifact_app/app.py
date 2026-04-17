@@ -349,13 +349,20 @@ class ArtifactSearchApp(tk.Tk):
         return outer
 
     def _build_footer(self):
-        footer = tk.Frame(self, bg=PARCHMENT, pady=8)
+        separator = tk.Frame(self, bg=BORDER_WARM, height=1)
+        separator.pack(side="bottom", fill="x")
+        footer = tk.Frame(self, bg=WARM_SAND, pady=6)
         footer.pack(side="bottom", fill="x")
         tk.Label(
             footer,
-            text=f"Double-click a result to open package in Azure DevOps  ·  ArtifactLens v{APP_VERSION}",
-            font=FONT_SANS_LABEL, bg=PARCHMENT, fg=STONE_GRAY,
-        ).pack()
+            text=f"💡 Tip: Double-click a result to open the package in Azure DevOps",
+            font=FONT_SANS_LABEL, bg=WARM_SAND, fg=OLIVE_GRAY, anchor="w",
+        ).pack(side="left", padx=16)
+        tk.Label(
+            footer,
+            text=f"ArtifactLens v{APP_VERSION}",
+            font=FONT_SANS_LABEL, bg=WARM_SAND, fg=STONE_GRAY, anchor="e",
+        ).pack(side="right", padx=16)
 
     # ── Browser ──
 
@@ -469,9 +476,9 @@ class ArtifactSearchApp(tk.Tk):
 
     def _on_cancel(self):
         self._cancel = True
-        self.status_var.set("Cancelling...")
+        self.status_var.set("Stopping...")
         self.cancel_btn.config(state="disabled")
-        self._log("Cancellation requested.", "warn")
+        self._log("Stop requested.", "warn")
         if self._session:
             try:
                 self._session.close()
@@ -499,7 +506,10 @@ class ArtifactSearchApp(tk.Tk):
         if not self._feeds_loading.is_set():
             self._log("Waiting for feed list to finish loading...")
             self.after(0, lambda: self.status_var.set("Waiting for feeds to load..."))
-            self._feeds_loading.wait()
+            while not self._feeds_loading.wait(timeout=0.2):
+                if self._cancel:
+                    self.after(0, lambda: self._finish_search("Search stopped.", []))
+                    return
 
         session = self._make_session(params.pat)
         self._session = session
@@ -520,7 +530,7 @@ class ArtifactSearchApp(tk.Tk):
                 return
             except Exception as e:
                 if self._cancel:
-                    self.after(0, lambda: self._finish_search("Search cancelled.", []))
+                    self.after(0, lambda: self._finish_search("Search stopped.", []))
                     return
                 self._log(f"Error fetching feeds: {e}", "error")
                 self.after(0, lambda: self._finish_search(f"Error fetching feeds: {e}", []))
@@ -540,7 +550,7 @@ class ArtifactSearchApp(tk.Tk):
         )
 
         if cancelled:
-            msg = "Search cancelled."
+            msg = "Search stopped."
         elif all_matches:
             msg = f"Done — {len(all_matches)} match(es) across {total} feeds."
             self._log(msg, "success")
@@ -578,7 +588,7 @@ class ArtifactSearchApp(tk.Tk):
                         for f in future_to_feed:
                             f.cancel()
                         executor.shutdown(wait=False, cancel_futures=True)
-                        self._log("Search cancelled.", "warn")
+                        self._log("Search stopped.", "warn")
                         return True
 
                     feed = future_to_feed[future]
