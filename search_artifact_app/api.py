@@ -58,10 +58,16 @@ def search_feed_for_version(
     feed_name: str,
     version: str,
     contains_match: bool = False,
+    first_match_only: bool = False,
     base_url: str = "",
     api_version: str = API_VERSION,
 ) -> list[dict]:
-    """Page through all packages in a feed and return those matching the target version."""
+    """Page through all packages in a feed and return those matching the target version.
+
+    When *first_match_only* is True the search stops as soon as the first
+    matching package is found in this feed, which is significantly faster
+    when every package in a feed shares the same version.
+    """
     matches = []
     skip = 0
     top = 500
@@ -100,6 +106,8 @@ def search_feed_for_version(
                         "isLatest": v.get("isLatest", False),
                         "publishDate": v.get("publishDate", ""),
                     })
+                    if first_match_only:
+                        return matches
         total = data.get("count", len(packages))
         skip += top
         if skip >= total:

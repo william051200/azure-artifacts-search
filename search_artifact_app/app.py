@@ -156,6 +156,14 @@ class ArtifactSearchApp(tk.Tk):
         )
         self.contains_match_cb.pack(side="left", padx=(12, 0))
 
+        self.first_match_var = tk.BooleanVar(value=True)
+        self.first_match_cb = tk.Checkbutton(
+            row2, text="First match per feed", variable=self.first_match_var,
+            font=FONT_SANS_SM, bg=IVORY, fg=OLIVE_GRAY,
+            activebackground=IVORY, selectcolor=WARM_SAND,
+        )
+        self.first_match_cb.pack(side="left", padx=(12, 0))
+
         tk.Label(
             row2, text="Threads:", font=FONT_SANS_SM,
             bg=IVORY, fg=STONE_GRAY,
@@ -342,7 +350,7 @@ class ArtifactSearchApp(tk.Tk):
         for widget in (
             self.version_entry, self.feed_entry,
             self.include_build_cb, self.contains_match_cb,
-            self.thread_spin, self.config_btn,
+            self.first_match_cb, self.thread_spin, self.config_btn,
         ):
             widget.config(state=state)
 
@@ -378,6 +386,7 @@ class ArtifactSearchApp(tk.Tk):
         feed_filter = self.feed_entry.get().strip() or None
         include_build = self.include_build_var.get()
         contains_match = self.contains_match_var.get()
+        first_match_only = self.first_match_var.get()
         base_url = build_base_url(self.org, self.project)
         api_ver = self.api_version
 
@@ -429,7 +438,7 @@ class ArtifactSearchApp(tk.Tk):
                 return []
             return search_feed_for_version(
                 session, feed["id"], feed["name"], version, contains_match,
-                base_url, api_ver,
+                first_match_only, base_url, api_ver,
             )
 
         cancelled = False
