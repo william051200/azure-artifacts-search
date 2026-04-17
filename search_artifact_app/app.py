@@ -142,7 +142,7 @@ class ArtifactSearchApp(tk.Tk):
             platform_frame, text="PLATFORM", font=("Segoe UI", 9, "bold"),
             bg=IVORY, fg=STONE_GRAY, anchor="w",
         ).pack(fill="x")
-        self.platform_var = tk.StringVar(value="No filter")
+        self.platform_var = tk.StringVar(value="Android")
         self.platform_combo = ttk.Combobox(
             platform_frame, textvariable=self.platform_var,
             values=["No filter", "Android", "MacIOS"],
