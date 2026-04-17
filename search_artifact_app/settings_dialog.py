@@ -7,18 +7,18 @@ from search_artifact_app.theme import (
     PARCHMENT, IVORY, WHITE, WARM_SAND, NEAR_BLACK,
     TERRACOTTA, CORAL, CHARCOAL_WARM, OLIVE_GRAY, STONE_GRAY,
     BORDER_WARM,
-    FONT_SERIF_LG, FONT_SANS_LABEL,
+    FONT_SERIF_LG, FONT_SANS_MD, FONT_SANS_LABEL, FONT_SANS_LABEL_BOLD, FONT_SANS_BTN,
 )
 
 
 def _make_field(form, label_text: str, default: str, show: str = "") -> tk.Entry:
     """Create a labeled entry field and return the Entry widget."""
     tk.Label(
-        form, text=label_text, font=("Segoe UI", 9, "bold"),
+        form, text=label_text, font=FONT_SANS_LABEL_BOLD,
         bg=PARCHMENT, fg=STONE_GRAY, anchor="w",
     ).pack(fill="x", pady=(12, 0))
     entry = tk.Entry(
-        form, font=("Segoe UI", 12), bg=WHITE, fg=NEAR_BLACK,
+        form, font=FONT_SANS_MD, bg=WHITE, fg=NEAR_BLACK,
         relief="flat", highlightbackground=BORDER_WARM, highlightthickness=1,
         insertbackground=NEAR_BLACK,
     )
@@ -56,14 +56,14 @@ def open_settings(parent) -> None:
     pat_header = tk.Frame(form, bg=PARCHMENT)
     pat_header.pack(fill="x", pady=(12, 0))
     tk.Label(
-        pat_header, text="PERSONAL ACCESS TOKEN", font=("Segoe UI", 9, "bold"),
+        pat_header, text="PERSONAL ACCESS TOKEN", font=FONT_SANS_LABEL_BOLD,
         bg=PARCHMENT, fg=STONE_GRAY, anchor="w",
     ).pack(side="left")
 
     show_var = tk.BooleanVar(value=False)
 
     pat_entry = tk.Entry(
-        form, font=("Segoe UI", 12), bg=WHITE, fg=NEAR_BLACK,
+        form, font=FONT_SANS_MD, bg=WHITE, fg=NEAR_BLACK,
         relief="flat", highlightbackground=BORDER_WARM, highlightthickness=1,
         insertbackground=NEAR_BLACK, show="•",
     )
@@ -109,14 +109,14 @@ def open_settings(parent) -> None:
         popup.destroy()
 
     tk.Button(
-        btn_frame, text="Save", font=("Segoe UI", 11, "bold"),
+        btn_frame, text="Save", font=FONT_SANS_BTN,
         bg=TERRACOTTA, fg=IVORY, relief="flat",
         activebackground=CORAL, cursor="hand2",
         padx=20, pady=6, command=_save,
     ).pack(side="left", padx=(0, 8))
 
     tk.Button(
-        btn_frame, text="Cancel", font=("Segoe UI", 11, "bold"),
+        btn_frame, text="Cancel", font=FONT_SANS_BTN,
         bg=WARM_SAND, fg=CHARCOAL_WARM, relief="flat",
         activebackground=BORDER_WARM, cursor="hand2",
         padx=16, pady=6, command=popup.destroy,

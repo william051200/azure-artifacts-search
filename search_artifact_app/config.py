@@ -4,6 +4,14 @@ ORG = "dnceng"
 PROJECT = "public"
 API_VERSION = "7.1-preview.1"
 
+# ── App defaults ──
+DEFAULT_VERSION = "26.2.10196"
+DEFAULT_THREADS = 8
+DEFAULT_PLATFORM = "Android"
+PLATFORM_OPTIONS = ["No filter", "Android", "MacIOS"]
+WINDOW_SIZE = "1200x720"
+WINDOW_MIN_SIZE = (900, 500)
+
 
 def build_base_url(org: str, project: str) -> str:
     return f"https://feeds.dev.azure.com/{org}/{project}/_apis/packaging"

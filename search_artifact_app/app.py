@@ -6,6 +6,7 @@ import os
 import threading
 import webbrowser
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from dataclasses import dataclass
 from tkinter import ttk
 import tkinter as tk
 
@@ -15,34 +16,51 @@ from dotenv import load_dotenv
 from search_artifact_app.config import (
     ORG, PROJECT, API_VERSION,
     build_base_url, build_artifact_url, PROTOCOL_TYPE_MAP,
+    DEFAULT_VERSION, DEFAULT_THREADS, DEFAULT_PLATFORM, PLATFORM_OPTIONS,
+    WINDOW_SIZE, WINDOW_MIN_SIZE,
 )
 from search_artifact_app.theme import (
     PARCHMENT, IVORY, WHITE, WARM_SAND, NEAR_BLACK, DARK_SURFACE,
     TERRACOTTA, CORAL, CHARCOAL_WARM, OLIVE_GRAY, STONE_GRAY,
     WARM_SILVER, BORDER_CREAM, BORDER_WARM, ERROR_RED,
-    FONT_SERIF_XL, FONT_SANS_SM, FONT_SANS_LABEL, FONT_MONO,
+    FONT_SERIF_NAV, FONT_SERIF_XL, FONT_SANS_SM, FONT_SANS_MD,
+    FONT_SANS_LG, FONT_SANS_LABEL, FONT_SANS_LABEL_BOLD, FONT_SANS_BTN,
+    FONT_MONO,
 )
 from search_artifact_app.api import is_build_specific_feed, get_feeds, search_feed_for_version
 from search_artifact_app.settings_dialog import open_settings
+
+
+@dataclass
+class SearchParams:
+    """Snapshot of UI inputs captured on the main thread before search starts."""
+    version: str
+    feed_filter: str | None
+    platform_filter: str
+    include_build: bool
+    contains_match: bool
+    first_match_only: bool
+    base_url: str
+    api_version: str
+    pat: str
+    max_workers: int
 
 
 class ArtifactSearchApp(tk.Tk):
     def __init__(self):
         super().__init__()
         self.title("ArtifactLens")
-        self.geometry("1200x720")
+        self.geometry(WINDOW_SIZE)
         self.configure(bg=PARCHMENT)
         self.resizable(True, True)
-        self.minsize(900, 500)
+        self.minsize(*WINDOW_MIN_SIZE)
 
         self._searching = False
         self._cancel = False
-        self._session = None  # active requests.Session for cancellation
+        self._session = None
 
-        # Load .env file if present
         load_dotenv()
 
-        # Editable config — prefer .env values, fall back to defaults
         self.org = os.getenv("AZURE_DEVOPS_ORG", ORG)
         self.project = os.getenv("AZURE_DEVOPS_PROJECT", PROJECT)
         self.api_version = API_VERSION
@@ -66,7 +84,7 @@ class ArtifactSearchApp(tk.Tk):
         nav.pack(fill="x")
         nav.pack_propagate(False)
         tk.Label(
-            nav, text="Artifact Search", font=("Georgia", 16, "normal"),
+            nav, text="ArtifactLens", font=FONT_SERIF_NAV,
             bg=NEAR_BLACK, fg=IVORY,
         ).pack(side="left", padx=20)
 
@@ -94,8 +112,25 @@ class ArtifactSearchApp(tk.Tk):
         ).pack()
         tk.Label(
             hero, text="Search across Azure DevOps Artifacts feeds for any version string.",
-            font=("Segoe UI", 12), bg=PARCHMENT, fg=OLIVE_GRAY,
+            font=FONT_SANS_MD, bg=PARCHMENT, fg=OLIVE_GRAY,
         ).pack(pady=(6, 0))
+
+    def _make_labeled_entry(self, parent, label: str, default: str = "") -> tk.Entry:
+        """Create a labeled entry field and return the Entry widget."""
+        tk.Label(
+            parent, text=label, font=FONT_SANS_LABEL_BOLD,
+            bg=IVORY, fg=STONE_GRAY, anchor="w",
+        ).pack(fill="x")
+        entry = tk.Entry(
+            parent, font=FONT_SANS_LG, bg=WHITE, fg=NEAR_BLACK,
+            relief="flat", highlightbackground=BORDER_WARM, highlightthickness=1,
+            insertbackground=NEAR_BLACK,
+        )
+        entry.pack(fill="x", ipady=6, pady=(4, 0))
+        if default:
+            entry.insert(0, default)
+        entry.bind("<Return>", lambda _: self._on_search())
+        return entry
 
     def _build_input_card(self):
         card = tk.Frame(self, bg=IVORY, highlightbackground=BORDER_CREAM, highlightthickness=1)
@@ -103,50 +138,29 @@ class ArtifactSearchApp(tk.Tk):
         card_inner = tk.Frame(card, bg=IVORY, padx=24, pady=20)
         card_inner.pack(fill="x")
 
-        # Row 1: Version + Feed filter
+        # Row 1: Version + Feed filter + Platform
         row1 = tk.Frame(card_inner, bg=IVORY)
         row1.pack(fill="x", pady=(0, 12))
 
         ver_frame = tk.Frame(row1, bg=IVORY)
         ver_frame.pack(side="left", fill="x", expand=True, padx=(0, 10))
-        tk.Label(
-            ver_frame, text="VERSION", font=("Segoe UI", 9, "bold"),
-            bg=IVORY, fg=STONE_GRAY, anchor="w",
-        ).pack(fill="x")
-        self.version_entry = tk.Entry(
-            ver_frame, font=("Segoe UI", 13), bg=WHITE, fg=NEAR_BLACK,
-            relief="flat", highlightbackground=BORDER_WARM, highlightthickness=1,
-            insertbackground=NEAR_BLACK,
-        )
-        self.version_entry.pack(fill="x", ipady=6, pady=(4, 0))
-        self.version_entry.insert(0, "26.2.10196")
-        self.version_entry.bind("<Return>", lambda _: self._on_search())
+        self.version_entry = self._make_labeled_entry(ver_frame, "VERSION", DEFAULT_VERSION)
 
         feed_frame = tk.Frame(row1, bg=IVORY)
         feed_frame.pack(side="left", fill="x", expand=True, padx=(0, 10))
-        tk.Label(
-            feed_frame, text="FEED FILTER (OPTIONAL)", font=("Segoe UI", 9, "bold"),
-            bg=IVORY, fg=STONE_GRAY, anchor="w",
-        ).pack(fill="x")
-        self.feed_entry = tk.Entry(
-            feed_frame, font=("Segoe UI", 13), bg=WHITE, fg=NEAR_BLACK,
-            relief="flat", highlightbackground=BORDER_WARM, highlightthickness=1,
-            insertbackground=NEAR_BLACK,
-        )
-        self.feed_entry.pack(fill="x", ipady=6, pady=(4, 0))
-        self.feed_entry.bind("<Return>", lambda _: self._on_search())
+        self.feed_entry = self._make_labeled_entry(feed_frame, "FEED FILTER (OPTIONAL)")
 
         platform_frame = tk.Frame(row1, bg=IVORY)
         platform_frame.pack(side="left")
         tk.Label(
-            platform_frame, text="PLATFORM", font=("Segoe UI", 9, "bold"),
+            platform_frame, text="PLATFORM", font=FONT_SANS_LABEL_BOLD,
             bg=IVORY, fg=STONE_GRAY, anchor="w",
         ).pack(fill="x")
-        self.platform_var = tk.StringVar(value="Android")
+        self.platform_var = tk.StringVar(value=DEFAULT_PLATFORM)
         self.platform_combo = ttk.Combobox(
             platform_frame, textvariable=self.platform_var,
-            values=["No filter", "Android", "MacIOS"],
-            state="readonly", font=("Segoe UI", 12), width=12,
+            values=PLATFORM_OPTIONS,
+            state="readonly", font=FONT_SANS_MD, width=12,
         )
         self.platform_combo.pack(ipady=4, pady=(4, 0))
 
@@ -182,7 +196,7 @@ class ArtifactSearchApp(tk.Tk):
             row2, text="Threads:", font=FONT_SANS_SM,
             bg=IVORY, fg=STONE_GRAY,
         ).pack(side="left", padx=(16, 4))
-        self.thread_var = tk.StringVar(value="8")
+        self.thread_var = tk.StringVar(value=str(DEFAULT_THREADS))
         self.thread_spin = tk.Spinbox(
             row2, from_=1, to=32, textvariable=self.thread_var,
             width=4, font=FONT_SANS_SM, bg=WHITE, fg=NEAR_BLACK,
@@ -191,7 +205,7 @@ class ArtifactSearchApp(tk.Tk):
         self.thread_spin.pack(side="left")
 
         self.cancel_btn = tk.Button(
-            row2, text="Cancel", font=("Segoe UI", 11, "bold"),
+            row2, text="Cancel", font=FONT_SANS_BTN,
             bg=WARM_SAND, fg=CHARCOAL_WARM, relief="flat",
             activebackground="#dfdbd0", cursor="hand2",
             padx=16, pady=6, state="disabled",
@@ -200,7 +214,7 @@ class ArtifactSearchApp(tk.Tk):
         self.cancel_btn.pack(side="right", padx=(8, 0))
 
         self.search_btn = tk.Button(
-            row2, text="Search", font=("Segoe UI", 11, "bold"),
+            row2, text="Search", font=FONT_SANS_BTN,
             bg=TERRACOTTA, fg=IVORY, relief="flat",
             activebackground=CORAL, cursor="hand2",
             padx=20, pady=6,
@@ -229,13 +243,11 @@ class ArtifactSearchApp(tk.Tk):
         )
         paned.pack(fill="both", expand=True, padx=32, pady=(8, 24))
 
-        # ── Results table ──
-        results_frame = tk.Frame(
-            paned, bg=IVORY, highlightbackground=BORDER_CREAM, highlightthickness=1,
-        )
-        tree_container = tk.Frame(results_frame, bg=IVORY)
-        tree_container.pack(fill="both", expand=True)
+        self._configure_tree_style()
+        paned.add(self._build_results_table(paned), stretch="always")
+        paned.add(self._build_log_panel(paned), stretch="never")
 
+    def _configure_tree_style(self):
         style = ttk.Style()
         style.theme_use("clam")
         style.configure("Claude.Treeview",
@@ -244,7 +256,7 @@ class ArtifactSearchApp(tk.Tk):
         )
         style.configure("Claude.Treeview.Heading",
             background=WARM_SAND, foreground=CHARCOAL_WARM,
-            font=("Segoe UI", 9, "bold"), borderwidth=0, relief="flat",
+            font=FONT_SANS_LABEL_BOLD, borderwidth=0, relief="flat",
         )
         style.map("Claude.Treeview",
             background=[("selected", WARM_SAND)],
@@ -258,11 +270,18 @@ class ArtifactSearchApp(tk.Tk):
             arrowcolor=STONE_GRAY, borderwidth=0,
         )
 
-        scrollbar = ttk.Scrollbar(tree_container, orient="vertical", style="Claude.Vertical.TScrollbar")
+    def _build_results_table(self, parent) -> tk.Frame:
+        frame = tk.Frame(
+            parent, bg=IVORY, highlightbackground=BORDER_CREAM, highlightthickness=1,
+        )
+        container = tk.Frame(frame, bg=IVORY)
+        container.pack(fill="both", expand=True)
+
+        scrollbar = ttk.Scrollbar(container, orient="vertical", style="Claude.Vertical.TScrollbar")
         scrollbar.pack(side="right", fill="y")
 
         self.tree = ttk.Treeview(
-            tree_container, style="Claude.Treeview",
+            container, style="Claude.Treeview",
             columns=("feed", "type", "name", "version", "latest"),
             show="headings", yscrollcommand=scrollbar.set,
         )
@@ -278,34 +297,33 @@ class ArtifactSearchApp(tk.Tk):
         self.tree.pack(fill="both", expand=True)
         self.tree.bind("<Double-1>", lambda _: self._open_selected())
         scrollbar.config(command=self.tree.yview)
+        return frame
 
-        paned.add(results_frame, stretch="always")
-
-        # ── Log panel ──
-        log_outer = tk.Frame(
-            paned, bg=IVORY, highlightbackground=BORDER_CREAM, highlightthickness=1,
+    def _build_log_panel(self, parent) -> tk.Frame:
+        outer = tk.Frame(
+            parent, bg=IVORY, highlightbackground=BORDER_CREAM, highlightthickness=1,
         )
-        log_header = tk.Frame(log_outer, bg=WARM_SAND, padx=16, pady=6)
-        log_header.pack(fill="x")
+        header = tk.Frame(outer, bg=WARM_SAND, padx=16, pady=6)
+        header.pack(fill="x")
         tk.Label(
-            log_header, text="LOG", font=("Segoe UI", 9, "bold"),
+            header, text="LOG", font=FONT_SANS_LABEL_BOLD,
             bg=WARM_SAND, fg=CHARCOAL_WARM, anchor="w",
         ).pack(side="left")
         tk.Button(
-            log_header, text="Clear", font=FONT_SANS_LABEL,
+            header, text="Clear", font=FONT_SANS_LABEL,
             bg=WARM_SAND, fg=OLIVE_GRAY, relief="flat",
             activebackground=BORDER_WARM, cursor="hand2",
             command=self._clear_log,
         ).pack(side="right")
 
-        log_container = tk.Frame(log_outer, bg=IVORY)
-        log_container.pack(fill="both", expand=True)
-        log_scrollbar = ttk.Scrollbar(log_container, orient="vertical", style="Claude.Vertical.TScrollbar")
-        log_scrollbar.pack(side="right", fill="y")
+        container = tk.Frame(outer, bg=IVORY)
+        container.pack(fill="both", expand=True)
+        scrollbar = ttk.Scrollbar(container, orient="vertical", style="Claude.Vertical.TScrollbar")
+        scrollbar.pack(side="right", fill="y")
         self.log_text = tk.Text(
-            log_container, font=FONT_MONO, bg=IVORY, fg=CHARCOAL_WARM,
+            container, font=FONT_MONO, bg=IVORY, fg=CHARCOAL_WARM,
             relief="flat", wrap="word", state="disabled", width=38,
-            yscrollcommand=log_scrollbar.set, borderwidth=0,
+            yscrollcommand=scrollbar.set, borderwidth=0,
             selectbackground=WARM_SAND, selectforeground=NEAR_BLACK,
         )
         self.log_text.tag_configure("timestamp", foreground=STONE_GRAY)
@@ -314,9 +332,8 @@ class ArtifactSearchApp(tk.Tk):
         self.log_text.tag_configure("error", foreground=ERROR_RED)
         self.log_text.tag_configure("warn", foreground=TERRACOTTA)
         self.log_text.pack(fill="both", expand=True, padx=8, pady=4)
-        log_scrollbar.config(command=self.log_text.yview)
-
-        paned.add(log_outer, stretch="never")
+        scrollbar.config(command=self.log_text.yview)
+        return outer
 
     def _build_footer(self):
         footer = tk.Frame(self, bg=PARCHMENT, pady=6)
@@ -360,7 +377,7 @@ class ArtifactSearchApp(tk.Tk):
     # ── Search actions ──
 
     def _set_inputs_state(self, state: str):
-        """Enable or disable all input fields. state is 'normal' or 'disabled'."""
+        """Enable or disable all input fields."""
         for widget in (
             self.version_entry, self.feed_entry,
             self.include_build_cb, self.contains_match_cb,
@@ -369,12 +386,30 @@ class ArtifactSearchApp(tk.Tk):
             widget.config(state=state)
         self.platform_combo.config(state="disabled" if state == "disabled" else "readonly")
 
+    def _capture_search_params(self) -> SearchParams:
+        """Snapshot all UI values on the main thread so the worker never touches Tk."""
+        return SearchParams(
+            version=self.version_entry.get().strip(),
+            feed_filter=self.feed_entry.get().strip() or None,
+            platform_filter=self.platform_var.get(),
+            include_build=self.include_build_var.get(),
+            contains_match=self.contains_match_var.get(),
+            first_match_only=self.first_match_var.get(),
+            base_url=build_base_url(self.org, self.project),
+            api_version=self.api_version,
+            pat=self.pat,
+            max_workers=max(1, min(32, int(self.thread_var.get()))),
+        )
+
     def _on_search(self):
         version = self.version_entry.get().strip()
         if not version or self._searching:
             return
         self._searching = True
         self._cancel = False
+
+        params = self._capture_search_params()
+
         self.search_btn.config(state="disabled")
         self.cancel_btn.config(state="normal")
         self._set_inputs_state("disabled")
@@ -383,39 +418,46 @@ class ArtifactSearchApp(tk.Tk):
         self.count_label.config(text="")
         self.status_var.set("Fetching feeds...")
         self._log(f"Starting search for version '{version}'...")
-        threading.Thread(target=self._search_thread, args=(version,), daemon=True).start()
+        threading.Thread(target=self._search_thread, args=(params,), daemon=True).start()
 
     def _on_cancel(self):
         self._cancel = True
         self.status_var.set("Cancelling...")
         self.cancel_btn.config(state="disabled")
         self._log("Cancellation requested.", "warn")
-        # Close the HTTP session to abort in-flight requests immediately
         if self._session:
             try:
                 self._session.close()
             except Exception:
                 pass
 
-    def _search_thread(self, version: str):
-        feed_filter = self.feed_entry.get().strip() or None
-        platform_filter = self.platform_var.get()
-        include_build = self.include_build_var.get()
-        contains_match = self.contains_match_var.get()
-        first_match_only = self.first_match_var.get()
-        base_url = build_base_url(self.org, self.project)
-        api_ver = self.api_version
+    def _filter_feeds(self, feeds: list[dict], params: SearchParams) -> list[dict]:
+        """Apply text, platform, and build-specific filters to the feed list."""
+        if params.feed_filter:
+            feeds = [f for f in feeds if params.feed_filter.lower() in f["name"].lower()]
+            self._log(f"Feed filter '{params.feed_filter}' applied — {len(feeds)} feeds match.")
+        if params.platform_filter and params.platform_filter != "No filter":
+            feeds = [f for f in feeds if params.platform_filter.lower() in f["name"].lower()]
+            self._log(f"Platform filter '{params.platform_filter}' applied — {len(feeds)} feeds match.")
+        if not params.include_build:
+            before = len(feeds)
+            feeds = [f for f in feeds if not is_build_specific_feed(f["name"])]
+            skipped = before - len(feeds)
+            if skipped:
+                self._log(f"Skipped {skipped} per-build feeds.")
+        return feeds
 
+    def _search_thread(self, params: SearchParams):
         session = requests.Session()
         session.headers["Accept"] = "application/json"
-        if self.pat:
-            token = base64.b64encode(f":{self.pat}".encode()).decode()
+        if params.pat:
+            token = base64.b64encode(f":{params.pat}".encode()).decode()
             session.headers["Authorization"] = f"Basic {token}"
         self._session = session
 
         try:
             self._log("Fetching feed list from Azure DevOps...")
-            feeds = get_feeds(session, base_url, api_ver)
+            feeds = get_feeds(session, params.base_url, params.api_version)
             self._log(f"Retrieved {len(feeds)} total feeds.", "success")
         except PermissionError as e:
             self._log(str(e), "error")
@@ -429,49 +471,60 @@ class ArtifactSearchApp(tk.Tk):
             self.after(0, lambda: self._finish_search(f"Error fetching feeds: {e}", []))
             return
 
-        # Filter feeds
-        if feed_filter:
-            feeds = [f for f in feeds if feed_filter.lower() in f["name"].lower()]
-            self._log(f"Feed filter '{feed_filter}' applied — {len(feeds)} feeds match.")
-        if platform_filter and platform_filter != "No filter":
-            feeds = [f for f in feeds if platform_filter.lower() in f["name"].lower()]
-            self._log(f"Platform filter '{platform_filter}' applied — {len(feeds)} feeds match.")
-        if not include_build:
-            before = len(feeds)
-            feeds = [f for f in feeds if not is_build_specific_feed(f["name"])]
-            skipped = before - len(feeds)
-            if skipped:
-                self._log(f"Skipped {skipped} per-build feeds.")
-
+        feeds = self._filter_feeds(feeds, params)
         total = len(feeds)
         all_matches = []
         completed = [0]
         lock = threading.Lock()
-        max_workers = max(1, min(32, int(self.thread_var.get())))
 
-        self.after(0, lambda: self.status_var.set(f"Searching {total} feeds for v{version}..."))
-        self._log(f"Searching {total} feeds with {max_workers} threads...")
+        self.after(0, lambda: self.status_var.set(f"Searching {total} feeds for v{params.version}..."))
+        self._log(f"Searching {total} feeds with {params.max_workers} threads...")
 
-        def _search_one_feed(feed):
+        cancelled = self._execute_parallel_search(
+            session, feeds, params, all_matches, completed, lock, total,
+        )
+
+        if cancelled:
+            msg = "Search cancelled."
+        elif all_matches:
+            msg = f"Done — {len(all_matches)} match(es) across {total} feeds."
+            self._log(msg, "success")
+        else:
+            msg = f"No packages found with version {params.version}."
+            self._log(msg, "warn")
+        self.after(0, lambda: self._finish_search(msg, all_matches))
+
+    def _execute_parallel_search(
+        self,
+        session: requests.Session,
+        feeds: list[dict],
+        params: SearchParams,
+        all_matches: list,
+        completed: list[int],
+        lock: threading.Lock,
+        total: int,
+    ) -> bool:
+        """Run the parallel feed search. Returns True if cancelled."""
+
+        def _search_one(feed):
             if self._cancel:
                 return []
             return search_feed_for_version(
-                session, feed["id"], feed["name"], version, contains_match,
-                first_match_only, base_url, api_ver,
+                session, feed["id"], feed["name"], params.version,
+                params.contains_match, params.first_match_only,
+                params.base_url, params.api_version,
             )
 
-        cancelled = False
         try:
-            with ThreadPoolExecutor(max_workers=max_workers) as executor:
-                future_to_feed = {executor.submit(_search_one_feed, f): f for f in feeds}
+            with ThreadPoolExecutor(max_workers=params.max_workers) as executor:
+                future_to_feed = {executor.submit(_search_one, f): f for f in feeds}
                 for future in as_completed(future_to_feed):
                     if self._cancel:
                         for f in future_to_feed:
                             f.cancel()
                         executor.shutdown(wait=False, cancel_futures=True)
                         self._log("Search cancelled.", "warn")
-                        cancelled = True
-                        break
+                        return True
 
                     feed = future_to_feed[future]
                     fname = feed["name"]
@@ -486,10 +539,8 @@ class ArtifactSearchApp(tk.Tk):
                     try:
                         matches = future.result()
                     except Exception as exc:
-                        # Suppress errors caused by cancellation
                         if self._cancel:
-                            cancelled = True
-                            break
+                            return True
                         self._log(f"Error searching feed '{fname}': {exc}", "error")
                         matches = []
 
@@ -509,17 +560,9 @@ class ArtifactSearchApp(tk.Tk):
         except Exception as e:
             if not self._cancel:
                 self._log(f"Search error: {e}", "error")
-            cancelled = True
+            return True
 
-        if cancelled:
-            msg = "Search cancelled."
-        elif all_matches:
-            msg = f"Done — {len(all_matches)} match(es) across {total} feeds."
-            self._log(msg, "success")
-        else:
-            msg = f"No packages found with version {version}."
-            self._log(msg, "warn")
-        self.after(0, lambda: self._finish_search(msg, all_matches))
+        return False
 
     def _finish_search(self, msg: str, matches: list):
         self.status_var.set(msg)
