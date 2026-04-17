@@ -1,5 +1,26 @@
 # Changelog
 
+## v1.1.0
+
+### Performance
+
+- **Feed list caching** — Feed list is prefetched in the background when the app launches; subsequent searches reuse the cache instead of re-fetching every time.
+- **Auto-detect max threads** — Thread count now defaults to the number of CPU cores available on the machine, maximizing parallel throughput out of the box.
+
+### UX Improvements
+
+- **Redesigned footer** — New warm-themed footer bar with a 💡 tip on the left and version badge on the right, separated by a visual divider.
+- **Window auto-centering** — App window now opens centered on screen so the footer is never hidden behind the taskbar.
+- **Stop button** — "Cancel" renamed to "Stop" across the UI and all status/log messages for clarity.
+
+### Bug Fixes
+
+- **Stop is now instant** — Clicking Stop during a prefetch wait no longer blocks; the app polls every 200 ms and exits immediately.
+- **Search-during-prefetch safety** — Clicking Search before prefetch completes now waits gracefully instead of triggering a duplicate fetch.
+- **Footer visibility** — Footer now packs before the main paned window so it is always visible regardless of window size.
+
+---
+
 ## v1.0.0
 
 Initial release of **ArtifactLens**.

@@ -14,7 +14,7 @@ DEFAULT_PLATFORM = "Android"
 PLATFORM_OPTIONS = ["No filter", "Android", "MacIOS"]
 WINDOW_SIZE = "1200x720"
 WINDOW_MIN_SIZE = (900, 500)
-APP_VERSION = "1.0.0"
+APP_VERSION = "1.1.0"
 
 
 def build_base_url(org: str, project: str) -> str:
