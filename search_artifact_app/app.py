@@ -29,7 +29,7 @@ from search_artifact_app.settings_dialog import open_settings
 class ArtifactSearchApp(tk.Tk):
     def __init__(self):
         super().__init__()
-        self.title("Azure Artifacts Search")
+        self.title("ArtifactLens")
         self.geometry("1200x720")
         self.configure(bg=PARCHMENT)
         self.resizable(True, True)
@@ -300,7 +300,7 @@ class ArtifactSearchApp(tk.Tk):
         footer = tk.Frame(self, bg=PARCHMENT, pady=6)
         footer.pack(fill="x")
         tk.Label(
-            footer, text="Double-click a result to open it in Azure DevOps  ·  Azure Artifacts Search",
+            footer, text="Double-click a result to open it in Azure DevOps  ·  ArtifactLens",
             font=FONT_SANS_LABEL, bg=PARCHMENT, fg=STONE_GRAY,
         ).pack()
 

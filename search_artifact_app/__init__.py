@@ -1,1 +1,1 @@
-"""Azure Artifacts Search — Desktop App package."""
+"""ArtifactLens — Desktop App package."""
