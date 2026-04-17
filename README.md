@@ -20,7 +20,7 @@ Double-click **`run.bat`** — it installs dependencies and launches the app aut
 **Option B — Build a standalone .exe (no Python needed after build):**
 
 1. Double-click **`build.bat`** (requires Python for the one-time build)
-2. Find the executable at `dist\ArtifactLens.exe`
+2. Find the executable at `dist\ArtifactLens\ArtifactLens.exe`
 3. Share or run that `.exe` anywhere — no Python required
 
 ## Usage

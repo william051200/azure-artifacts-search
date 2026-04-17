@@ -2,7 +2,7 @@
 echo Installing build dependencies...
 pip install -q pyinstaller -r requirements.txt
 echo Building executable...
-pyinstaller --onefile --noconsole --name ArtifactLens ^
+pyinstaller --onedir --noconsole --name ArtifactLens ^
     --hidden-import=search_artifact_app ^
     --hidden-import=search_artifact_app.app ^
     --hidden-import=search_artifact_app.api ^
@@ -11,5 +11,5 @@ pyinstaller --onefile --noconsole --name ArtifactLens ^
     --hidden-import=search_artifact_app.settings_dialog ^
     search_artifact_app\__main__.py
 echo.
-echo Done! Executable is at: dist\ArtifactLens.exe
+echo Done! Executable is at: dist\ArtifactLens\ArtifactLens.exe
 pause
