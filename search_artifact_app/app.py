@@ -123,7 +123,7 @@ class ArtifactSearchApp(tk.Tk):
         self.version_entry.bind("<Return>", lambda _: self._on_search())
 
         feed_frame = tk.Frame(row1, bg=IVORY)
-        feed_frame.pack(side="left", fill="x", expand=True)
+        feed_frame.pack(side="left", fill="x", expand=True, padx=(0, 10))
         tk.Label(
             feed_frame, text="FEED FILTER (OPTIONAL)", font=("Segoe UI", 9, "bold"),
             bg=IVORY, fg=STONE_GRAY, anchor="w",
@@ -135,6 +135,20 @@ class ArtifactSearchApp(tk.Tk):
         )
         self.feed_entry.pack(fill="x", ipady=6, pady=(4, 0))
         self.feed_entry.bind("<Return>", lambda _: self._on_search())
+
+        platform_frame = tk.Frame(row1, bg=IVORY)
+        platform_frame.pack(side="left")
+        tk.Label(
+            platform_frame, text="PLATFORM", font=("Segoe UI", 9, "bold"),
+            bg=IVORY, fg=STONE_GRAY, anchor="w",
+        ).pack(fill="x")
+        self.platform_var = tk.StringVar(value="No filter")
+        self.platform_combo = ttk.Combobox(
+            platform_frame, textvariable=self.platform_var,
+            values=["No filter", "Android", "MacIOS"],
+            state="readonly", font=("Segoe UI", 12), width=12,
+        )
+        self.platform_combo.pack(ipady=4, pady=(4, 0))
 
         # Row 2: Checkboxes + Buttons
         row2 = tk.Frame(card_inner, bg=IVORY)
@@ -353,6 +367,7 @@ class ArtifactSearchApp(tk.Tk):
             self.first_match_cb, self.thread_spin, self.config_btn,
         ):
             widget.config(state=state)
+        self.platform_combo.config(state="disabled" if state == "disabled" else "readonly")
 
     def _on_search(self):
         version = self.version_entry.get().strip()
@@ -384,6 +399,7 @@ class ArtifactSearchApp(tk.Tk):
 
     def _search_thread(self, version: str):
         feed_filter = self.feed_entry.get().strip() or None
+        platform_filter = self.platform_var.get()
         include_build = self.include_build_var.get()
         contains_match = self.contains_match_var.get()
         first_match_only = self.first_match_var.get()
@@ -417,6 +433,9 @@ class ArtifactSearchApp(tk.Tk):
         if feed_filter:
             feeds = [f for f in feeds if feed_filter.lower() in f["name"].lower()]
             self._log(f"Feed filter '{feed_filter}' applied — {len(feeds)} feeds match.")
+        if platform_filter and platform_filter != "No filter":
+            feeds = [f for f in feeds if platform_filter.lower() in f["name"].lower()]
+            self._log(f"Platform filter '{platform_filter}' applied — {len(feeds)} feeds match.")
         if not include_build:
             before = len(feeds)
             feeds = [f for f in feeds if not is_build_specific_feed(f["name"])]
