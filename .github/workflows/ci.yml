@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint-and-build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt pyinstaller
+
+      - name: Syntax check
+        run: |
+          python -m py_compile search_artifact_app/config.py
+          python -m py_compile search_artifact_app/api.py
+          python -m py_compile search_artifact_app/app.py
+          python -m py_compile search_artifact_app/theme.py
+          python -m py_compile search_artifact_app/settings_dialog.py
+          python -m py_compile search_artifact_app/__main__.py
+
+      - name: Import validation
+        run: python -c "from search_artifact_app.app import ArtifactSearchApp; print('All imports OK')"
+
+      - name: Build executable
+        run: >
+          pyinstaller --onedir --noconsole --name ArtifactLens
+          --hidden-import=search_artifact_app
+          --hidden-import=search_artifact_app.app
+          --hidden-import=search_artifact_app.api
+          --hidden-import=search_artifact_app.config
+          --hidden-import=search_artifact_app.theme
+          --hidden-import=search_artifact_app.settings_dialog
+          search_artifact_app/__main__.py
+
+      - name: Verify build output
+        run: Test-Path dist/ArtifactLens/ArtifactLens.exe
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ArtifactLens
+          path: dist/ArtifactLens/
+          retention-days: 14
