@@ -3,7 +3,7 @@
 import re
 import requests
 
-from search_artifact_app.config import build_base_url, API_VERSION
+from search_artifact_app.config import API_VERSION
 
 
 def is_build_specific_feed(name: str) -> bool:
@@ -108,6 +108,7 @@ def search_feed_for_version(
                     })
                     if first_match_only:
                         return matches
+                    break
         total = data.get("count", len(packages))
         skip += top
         if skip >= total:

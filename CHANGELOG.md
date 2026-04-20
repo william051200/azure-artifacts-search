@@ -1,16 +1,21 @@
 # Changelog
 
-## v0.1.2
+## v0.1.2 — 2026-04-20
 
 ### UX Improvements
 
 - **Right-click context menu** — Right-click any result row to choose between "Go to Feed" and "Go to Artifact" for flexible navigation.
 - **Default double-click opens feed** — Double-clicking a result now opens the feed page instead of the artifact page.
 - **Updated footer tip** — Footer tip updated to reflect the new double-click and right-click interactions.
+- **Deduplicate feeds option** — New checkbox to filter out duplicate feeds that appear in both org and project scope (default: off).
+
+### Performance
+
+- **Early break on version match** — Search skips remaining versions of a package once a match is found, reducing unnecessary iteration.
 
 ---
 
-## v0.1.1
+## v0.1.1 — 2026-04-17
 
 ### Performance
 
@@ -31,7 +36,7 @@
 
 ---
 
-## v0.1.0
+## v0.1.0 — 2026-04-17
 
 Initial release of **ArtifactLens**.
 

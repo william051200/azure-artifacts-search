@@ -40,6 +40,7 @@ class SearchParams:
     include_build: bool
     contains_match: bool
     first_match_only: bool
+    deduplicate_feeds: bool
     base_url: str
     api_version: str
     pat: str
@@ -204,6 +205,14 @@ class ArtifactSearchApp(tk.Tk):
             activebackground=IVORY, selectcolor=WARM_SAND,
         )
         self.first_match_cb.pack(side="left", padx=(12, 0))
+
+        self.dedup_feeds_var = tk.BooleanVar(value=True)
+        self.dedup_feeds_cb = tk.Checkbutton(
+            row2, text="Deduplicate feeds", variable=self.dedup_feeds_var,
+            font=FONT_SANS_SM, bg=IVORY, fg=OLIVE_GRAY,
+            activebackground=IVORY, selectcolor=WARM_SAND,
+        )
+        self.dedup_feeds_cb.pack(side="left", padx=(12, 0))
 
         tk.Label(
             row2, text="Threads:", font=FONT_SANS_SM,
@@ -469,7 +478,7 @@ class ArtifactSearchApp(tk.Tk):
         for widget in (
             self.version_entry, self.feed_entry,
             self.include_build_cb, self.contains_match_cb,
-            self.first_match_cb, self.thread_spin, self.config_btn,
+            self.first_match_cb, self.dedup_feeds_cb, self.thread_spin, self.config_btn,
         ):
             widget.config(state=state)
         self.platform_combo.config(state="disabled" if state == "disabled" else "readonly")
@@ -483,6 +492,7 @@ class ArtifactSearchApp(tk.Tk):
             include_build=self.include_build_var.get(),
             contains_match=self.contains_match_var.get(),
             first_match_only=self.first_match_var.get(),
+            deduplicate_feeds=self.dedup_feeds_var.get(),
             base_url=build_base_url(self.org, self.project),
             api_version=self.api_version,
             pat=self.pat,
@@ -527,6 +537,13 @@ class ArtifactSearchApp(tk.Tk):
         if params.platform_filter and params.platform_filter != "No filter":
             feeds = [f for f in feeds if params.platform_filter.lower() in f["name"].lower()]
             self._log(f"Platform filter '{params.platform_filter}' applied — {len(feeds)} feeds match.")
+        if params.deduplicate_feeds:
+            before = len(feeds)
+            seen = set()
+            feeds = [f for f in feeds if f["name"] not in seen and not seen.add(f["name"])]
+            deduped = before - len(feeds)
+            if deduped:
+                self._log(f"Deduplicated {deduped} duplicate feeds.")
         if not params.include_build:
             before = len(feeds)
             feeds = [f for f in feeds if not is_build_specific_feed(f["name"])]
