@@ -1,6 +1,16 @@
 # Changelog
 
-## v1.1.0
+## v0.1.2
+
+### UX Improvements
+
+- **Right-click context menu** — Right-click any result row to choose between "Go to Feed" and "Go to Artifact" for flexible navigation.
+- **Default double-click opens feed** — Double-clicking a result now opens the feed page instead of the artifact page.
+- **Updated footer tip** — Footer tip updated to reflect the new double-click and right-click interactions.
+
+---
+
+## v0.1.1
 
 ### Performance
 
@@ -21,7 +31,7 @@
 
 ---
 
-## v1.0.0
+## v0.1.0
 
 Initial release of **ArtifactLens**.
 
