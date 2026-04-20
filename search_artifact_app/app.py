@@ -15,7 +15,7 @@ from dotenv import load_dotenv
 
 from search_artifact_app.config import (
     ORG, PROJECT, API_VERSION,
-    build_base_url, build_artifact_url, PROTOCOL_TYPE_MAP,
+    build_base_url, build_artifact_url, build_feed_url, PROTOCOL_TYPE_MAP,
     DEFAULT_VERSION, DEFAULT_THREADS, DEFAULT_PLATFORM, PLATFORM_OPTIONS,
     WINDOW_SIZE, WINDOW_MIN_SIZE, APP_VERSION, MAX_THREADS,
 )
@@ -309,6 +309,7 @@ class ArtifactSearchApp(tk.Tk):
             self.tree.column(col, width=width, minwidth=minw)
         self.tree.pack(fill="both", expand=True)
         self.tree.bind("<Double-1>", lambda _: self._open_selected())
+        self.tree.bind("<Button-3>", self._show_context_menu)
         scrollbar.config(command=self.tree.yview)
         return frame
 
@@ -355,7 +356,7 @@ class ArtifactSearchApp(tk.Tk):
         footer.pack(side="bottom", fill="x")
         tk.Label(
             footer,
-            text=f"💡 Tip: Double-click a result to open the package in Azure DevOps",
+            text=f"💡 Tip: Double-click to open feed · Right-click for more options",
             font=FONT_SANS_LABEL, bg=WARM_SAND, fg=OLIVE_GRAY, anchor="w",
         ).pack(side="left", padx=16)
         tk.Label(
@@ -366,15 +367,48 @@ class ArtifactSearchApp(tk.Tk):
 
     # ── Browser ──
 
-    def _open_selected(self):
+    def _get_selected_values(self):
+        """Return (feed_name, pkg_type, pkg_name, pkg_version) for the selected row, or None."""
         sel = self.tree.selection()
         if not sel:
-            return
+            return None
         values = self.tree.item(sel[0], "values")
-        feed_name, pkg_type, pkg_name, pkg_version = values[0], values[1], values[2], values[3]
+        return values[0], values[1], values[2], values[3]
+
+    def _open_selected(self):
+        """Double-click handler — opens the feed URL by default."""
+        self._open_feed_url()
+
+    def _open_feed_url(self):
+        vals = self._get_selected_values()
+        if not vals:
+            return
+        feed_name = vals[0]
+        url = build_feed_url(self.org, self.project, feed_name)
+        webbrowser.open(url)
+
+    def _open_artifact_url(self):
+        vals = self._get_selected_values()
+        if not vals:
+            return
+        feed_name, pkg_type, pkg_name, pkg_version = vals
         proto = PROTOCOL_TYPE_MAP.get(pkg_type, pkg_type)
         url = build_artifact_url(self.org, self.project, feed_name, proto, pkg_name, pkg_version)
         webbrowser.open(url)
+
+    def _show_context_menu(self, event):
+        """Show right-click context menu on the results table."""
+        row_id = self.tree.identify_row(event.y)
+        if not row_id:
+            return
+        self.tree.selection_set(row_id)
+        menu = tk.Menu(self, tearoff=0, font=FONT_SANS_SM,
+                       bg=IVORY, fg=NEAR_BLACK, activebackground=WARM_SAND,
+                       activeforeground=NEAR_BLACK)
+        menu.add_command(label="Go to Feed", command=self._open_feed_url)
+        menu.add_command(label="Go to Artifact", command=self._open_artifact_url)
+        menu.tk_popup(event.x_root, event.y_root)
+        menu.grab_release()
 
     # ── Logging ──
 

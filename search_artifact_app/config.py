@@ -21,6 +21,10 @@ def build_base_url(org: str, project: str) -> str:
     return f"https://feeds.dev.azure.com/{org}/{project}/_apis/packaging"
 
 
+def build_feed_url(org: str, project: str, feed: str) -> str:
+    return f"https://dev.azure.com/{org}/{project}/_artifacts/feed/{feed}"
+
+
 def build_artifact_url(org: str, project: str, feed: str, proto: str, package: str, version: str) -> str:
     return f"https://dev.azure.com/{org}/{project}/_artifacts/feed/{feed}/{proto}/{package}/overview/{version}"
 
