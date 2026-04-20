@@ -1,12 +1,13 @@
 """Default Azure DevOps configuration."""
 
+import os
+
 ORG = "dnceng"
 PROJECT = "public"
 API_VERSION = "7.1-preview.1"
 
 # ── App defaults ──
 DEFAULT_VERSION = "26.2.10196"
-import os
 
 DEFAULT_THREADS = os.cpu_count() or 8
 MAX_THREADS = DEFAULT_THREADS
