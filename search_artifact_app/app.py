@@ -15,7 +15,7 @@ from dotenv import load_dotenv
 
 from search_artifact_app.config import (
     ORG, PROJECT, API_VERSION,
-    build_base_url, build_artifact_url, build_feed_url, PROTOCOL_TYPE_MAP,
+    build_base_url, build_artifact_url, build_feed_url, build_nuget_source_xml, PROTOCOL_TYPE_MAP,
     DEFAULT_VERSION, DEFAULT_THREADS, DEFAULT_PLATFORM, PLATFORM_OPTIONS,
     WINDOW_SIZE, WINDOW_MIN_SIZE, APP_VERSION, MAX_THREADS,
 )
@@ -406,6 +406,17 @@ class ArtifactSearchApp(tk.Tk):
         url = build_artifact_url(self.org, self.project, feed_name, proto, pkg_name, pkg_version)
         webbrowser.open(url)
 
+    def _copy_nuget_source(self):
+        """Copy the NuGet <add key=...> XML snippet for the selected feed to clipboard."""
+        vals = self._get_selected_values()
+        if not vals:
+            return
+        feed_name = vals[0]
+        snippet = build_nuget_source_xml(feed_name, self.org, self.project)
+        self.clipboard_clear()
+        self.clipboard_append(snippet)
+        self._log(f"Copied NuGet source to clipboard: {feed_name}")
+
     def _show_context_menu(self, event):
         """Show right-click context menu on the results table."""
         row_id = self.tree.identify_row(event.y)
@@ -417,6 +428,8 @@ class ArtifactSearchApp(tk.Tk):
                        activeforeground=NEAR_BLACK)
         menu.add_command(label="Go to Feed", command=self._open_feed_url)
         menu.add_command(label="Go to Artifact", command=self._open_artifact_url)
+        menu.add_separator()
+        menu.add_command(label="Copy NuGet Source", command=self._copy_nuget_source)
         menu.tk_popup(event.x_root, event.y_root)
         menu.grab_release()
 

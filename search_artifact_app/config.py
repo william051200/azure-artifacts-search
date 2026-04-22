@@ -15,7 +15,7 @@ DEFAULT_PLATFORM = "Android"
 PLATFORM_OPTIONS = ["No filter", "Android", "MacIOS"]
 WINDOW_SIZE = "1200x720"
 WINDOW_MIN_SIZE = (900, 500)
-APP_VERSION = "0.1.2"
+APP_VERSION = "0.1.3"
 
 
 def build_base_url(org: str, project: str) -> str:
@@ -24,6 +24,11 @@ def build_base_url(org: str, project: str) -> str:
 
 def build_feed_url(org: str, project: str, feed: str) -> str:
     return f"https://dev.azure.com/{org}/{project}/_artifacts/feed/{feed}"
+
+
+def build_nuget_source_xml(feed: str, org: str, project: str) -> str:
+    url = f"https://pkgs.dev.azure.com/{org}/{project}/_packaging/{feed}/nuget/v3/index.json"
+    return f'<add key="{feed}" value="{url}" />'
 
 
 def build_artifact_url(org: str, project: str, feed: str, proto: str, package: str, version: str) -> str:
