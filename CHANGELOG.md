@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.1.3 — 2026-04-22
+
+### Features
+
+- **Copy NuGet Source** — New right-click context menu option that copies the `<add key="..." value="..." />` XML snippet for the selected feed's NuGet source to the clipboard, ready to paste into a `nuget.config` file.
+
+---
+
 ## v0.1.2 — 2026-04-20
 
 ### UX Improvements
