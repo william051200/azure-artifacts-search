@@ -60,7 +60,7 @@ python -m search_artifact_app
 ## Building the Executable
 
 ```bash
-build.bat
+scripts\build.bat
 ```
 
 The output will be at `dist\ArtifactLens\ArtifactLens.exe`.

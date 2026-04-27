@@ -16,11 +16,11 @@ git clone https://github.com/william051200/azure-artifacts-search.git
 cd azure-artifacts-search
 ```
 
-Double-click **`run.bat`** — it installs dependencies and launches the app automatically.
+Double-click **`scripts/run.bat`** — it installs dependencies and launches the app automatically.
 
 ### Option C — Build the executable yourself
 
-1. Double-click **`build.bat`** (requires Python for the one-time build)
+1. Double-click **`scripts/build.bat`** (requires Python for the one-time build)
 2. Find the output at `dist\ArtifactLens\ArtifactLens.exe`
 3. Share the entire `dist\ArtifactLens\` folder — no Python required on target machines
 
