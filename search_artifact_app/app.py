@@ -63,7 +63,8 @@ class ArtifactSearchApp(tk.Tk):
         self._feeds_loaded = False
         self._feeds_loading = threading.Event()
 
-        load_dotenv()
+        env_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env")
+        load_dotenv(env_path)
         self.org = os.getenv("AZURE_DEVOPS_ORG", "")
         self.project = os.getenv("AZURE_DEVOPS_PROJECT", "")
         self.api_version = os.getenv("API_VERSION", API_VERSION)
