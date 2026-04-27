@@ -1,0 +1,52 @@
+name: Release
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-and-release:
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt pyinstaller
+
+      - name: Read version from config
+        id: version
+        run: |
+          $ver = python -c "from search_artifact_app.config import APP_VERSION; print(APP_VERSION)"
+          echo "APP_VERSION=$ver" >> $env:GITHUB_OUTPUT
+
+      - name: Build executable
+        run: >
+          pyinstaller --onedir --noconsole --name ArtifactLens
+          --hidden-import=search_artifact_app
+          --hidden-import=search_artifact_app.app
+          --hidden-import=search_artifact_app.api
+          --hidden-import=search_artifact_app.config
+          --hidden-import=search_artifact_app.theme
+          --hidden-import=search_artifact_app.settings_dialog
+          search_artifact_app/__main__.py
+
+      - name: Verify build output
+        run: Test-Path dist/ArtifactLens/ArtifactLens.exe
+
+      - name: Zip release
+        run: Compress-Archive -Path dist/ArtifactLens/* -DestinationPath ArtifactLens.zip
+
+      - name: Create tag and GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.version.outputs.APP_VERSION }}
+          name: v${{ steps.version.outputs.APP_VERSION }}
+          generate_release_notes: false
+          body_path: CHANGELOG.md
+          files: ArtifactLens.zip
