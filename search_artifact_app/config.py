@@ -2,12 +2,9 @@
 
 import os
 
-ORG = ""
-PROJECT = ""
 API_VERSION = "7.1-preview.1"
 
 # ── App defaults ──
-DEFAULT_VERSION = ""
 
 DEFAULT_THREADS = os.cpu_count() or 8
 MAX_THREADS = DEFAULT_THREADS

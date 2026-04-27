@@ -14,9 +14,9 @@ import requests
 from dotenv import load_dotenv
 
 from search_artifact_app.config import (
-    ORG, PROJECT, API_VERSION,
+    API_VERSION,
     build_base_url, build_artifact_url, build_feed_url, build_nuget_source_xml, PROTOCOL_TYPE_MAP,
-    DEFAULT_VERSION, DEFAULT_THREADS, DEFAULT_PLATFORM, PLATFORM_OPTIONS,
+    DEFAULT_THREADS, DEFAULT_PLATFORM, PLATFORM_OPTIONS,
     WINDOW_SIZE, WINDOW_MIN_SIZE, APP_VERSION, MAX_THREADS,
 )
 from search_artifact_app.theme import (
@@ -64,13 +64,13 @@ class ArtifactSearchApp(tk.Tk):
         self._feeds_loading = threading.Event()
 
         load_dotenv()
-        self.org = os.getenv("AZURE_DEVOPS_ORG", ORG)
-        self.project = os.getenv("AZURE_DEVOPS_PROJECT", PROJECT)
+        self.org = os.getenv("AZURE_DEVOPS_ORG", "")
+        self.project = os.getenv("AZURE_DEVOPS_PROJECT", "")
         self.api_version = os.getenv("API_VERSION", API_VERSION)
         pat_env = os.getenv("AZURE_DEVOPS_PAT", "")
         self.pat = "" if pat_env.startswith("<") else pat_env
         self.default_platform = os.getenv("DEFAULT_PLATFORM", DEFAULT_PLATFORM)
-        self.default_version = os.getenv("DEFAULT_VERSION", DEFAULT_VERSION)
+        self.default_version = os.getenv("DEFAULT_VERSION", "")
 
         self._build_ui()
         self._center_window()
