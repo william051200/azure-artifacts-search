@@ -1,5 +1,24 @@
 # Changelog
 
+## v1.0.0 — 2026-04-27
+
+### Features
+
+- **Persist all settings to `.env`** — Organization, project, PAT, API version, default version, and default platform are now saved to and loaded from a `.env` file.
+- **First-time setup guidance** — README includes clear instructions for configuring org, project, and PAT on first launch.
+
+### UX Improvements
+
+- **Cleaner Settings dialog** — Removed API version, default version, and default platform fields from Settings; version and platform are set directly in the main UI.
+- **Scripts moved to `scripts/` folder** — `build.bat` and `run.bat` relocated to `scripts/` for better project organization.
+
+### Housekeeping
+
+- **Removed hardcoded defaults** — Organization, project, and default version are no longer hardcoded in config; all values come from `.env`.
+- **Design credit** — Added acknowledgement to [VoltAgent/awesome-design-md](https://github.com/VoltAgent/awesome-design-md) in README.
+
+---
+
 ## v0.1.3 — 2026-04-22
 
 ### Features

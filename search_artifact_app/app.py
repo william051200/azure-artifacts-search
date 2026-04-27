@@ -14,9 +14,9 @@ import requests
 from dotenv import load_dotenv
 
 from search_artifact_app.config import (
-    ORG, PROJECT, API_VERSION,
+    API_VERSION,
     build_base_url, build_artifact_url, build_feed_url, build_nuget_source_xml, PROTOCOL_TYPE_MAP,
-    DEFAULT_VERSION, DEFAULT_THREADS, DEFAULT_PLATFORM, PLATFORM_OPTIONS,
+    DEFAULT_THREADS, DEFAULT_PLATFORM, PLATFORM_OPTIONS,
     WINDOW_SIZE, WINDOW_MIN_SIZE, APP_VERSION, MAX_THREADS,
 )
 from search_artifact_app.theme import (
@@ -64,11 +64,13 @@ class ArtifactSearchApp(tk.Tk):
         self._feeds_loading = threading.Event()
 
         load_dotenv()
-        self.org = os.getenv("AZURE_DEVOPS_ORG", ORG)
-        self.project = os.getenv("AZURE_DEVOPS_PROJECT", PROJECT)
-        self.api_version = API_VERSION
+        self.org = os.getenv("AZURE_DEVOPS_ORG", "")
+        self.project = os.getenv("AZURE_DEVOPS_PROJECT", "")
+        self.api_version = os.getenv("API_VERSION", API_VERSION)
         pat_env = os.getenv("AZURE_DEVOPS_PAT", "")
         self.pat = "" if pat_env.startswith("<") else pat_env
+        self.default_platform = os.getenv("DEFAULT_PLATFORM", DEFAULT_PLATFORM)
+        self.default_version = os.getenv("DEFAULT_VERSION", "")
 
         self._build_ui()
         self._center_window()
@@ -159,7 +161,7 @@ class ArtifactSearchApp(tk.Tk):
 
         ver_frame = tk.Frame(row1, bg=IVORY)
         ver_frame.pack(side="left", fill="x", expand=True, padx=(0, 10))
-        self.version_entry = self._make_labeled_entry(ver_frame, "VERSION", DEFAULT_VERSION)
+        self.version_entry = self._make_labeled_entry(ver_frame, "VERSION", self.default_version)
 
         feed_frame = tk.Frame(row1, bg=IVORY)
         feed_frame.pack(side="left", fill="x", expand=True, padx=(0, 10))
@@ -171,7 +173,7 @@ class ArtifactSearchApp(tk.Tk):
             platform_frame, text="PLATFORM", font=FONT_SANS_LABEL_BOLD,
             bg=IVORY, fg=STONE_GRAY, anchor="w",
         ).pack(fill="x")
-        self.platform_var = tk.StringVar(value=DEFAULT_PLATFORM)
+        self.platform_var = tk.StringVar(value=self.default_platform)
         self.platform_combo = ttk.Combobox(
             platform_frame, textvariable=self.platform_var,
             values=PLATFORM_OPTIONS,
