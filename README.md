@@ -26,7 +26,7 @@ Double-click **`scripts/run.bat`** — it installs dependencies and launches the
 
 ## Usage
 
-1. Enter a version (e.g. `26.2.10196`)
+1. Enter a version (e.g. `1.0.0`)
 2. Optionally set a **feed filter**, **platform** (Android / MacIOS), or toggle search options
 3. Click **Search**
 4. Double-click a result to open the package in Azure DevOps

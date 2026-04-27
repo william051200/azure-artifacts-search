@@ -50,7 +50,6 @@ def open_settings(parent) -> None:
 
     org_entry = _make_field(form, "ORGANIZATION", parent.org)
     project_entry = _make_field(form, "PROJECT", parent.project)
-    api_entry = _make_field(form, "API VERSION", parent.api_version)
 
     # PAT field with show/hide toggle
     pat_header = tk.Frame(form, bg=PARCHMENT)
@@ -87,8 +86,9 @@ def open_settings(parent) -> None:
     def _save():
         parent.org = org_entry.get().strip() or parent.org
         parent.project = project_entry.get().strip() or parent.project
-        parent.api_version = api_entry.get().strip() or parent.api_version
         parent.pat = pat_entry.get().strip()
+        parent.default_version = parent.version_entry.get().strip()
+        parent.default_platform = parent.platform_var.get()
         parent.nav_label.config(text=f"{parent.org} / {parent.project}")
 
         # Persist settings to the .env file
@@ -102,6 +102,15 @@ def open_settings(parent) -> None:
             "\n",
             "# Azure DevOps Project Name\n",
             f"AZURE_DEVOPS_PROJECT={parent.project}\n",
+            "\n",
+            "# Azure DevOps API Version\n",
+            f"API_VERSION={parent.api_version}\n",
+            "\n",
+            "# Default search version\n",
+            f"DEFAULT_VERSION={parent.default_version}\n",
+            "\n",
+            "# Default platform filter\n",
+            f"DEFAULT_PLATFORM={parent.default_platform}\n",
         ]
         with open(env_path, "w", encoding="utf-8") as f:
             f.writelines(lines)
