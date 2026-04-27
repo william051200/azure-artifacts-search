@@ -24,6 +24,13 @@ Double-click **`scripts/run.bat`** — it installs dependencies and launches the
 2. Find the output at `dist\ArtifactLens\ArtifactLens.exe`
 3. Share the entire `dist\ArtifactLens\` folder — no Python required on target machines
 
+## First-Time Setup
+
+1. Launch the app and click **⚙ Settings**
+2. Fill in your **Organization** and **Project** name from Azure DevOps
+3. For private feeds, enter your **Personal Access Token (PAT)**
+4. Click **Save** — settings are stored locally in a `.env` file
+
 ## Usage
 
 1. Enter a version (e.g. `1.0.0`)
@@ -31,4 +38,6 @@ Double-click **`scripts/run.bat`** — it installs dependencies and launches the
 3. Click **Search**
 4. Double-click a result to open the package in Azure DevOps
 
-For private feeds, set your PAT in **⚙ Settings** inside the app.
+## Acknowledgements
+
+UI design inspired by [VoltAgent/awesome-design-md](https://github.com/VoltAgent/awesome-design-md).
