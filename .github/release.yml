@@ -1,0 +1,27 @@
+changelog:
+  exclude:
+    labels:
+      - chore
+      - docs
+      - dependencies
+      - ci
+      - refactor
+  categories:
+    - title: "🚀 Features"
+      labels:
+        - feature
+        - enhancement
+    - title: "🐛 Bug Fixes"
+      labels:
+        - bug
+        - fix
+    - title: "⚡ Performance"
+      labels:
+        - performance
+    - title: "🎨 UX Improvements"
+      labels:
+        - ux
+        - ui
+    - title: "Other Changes"
+      labels:
+        - "*"

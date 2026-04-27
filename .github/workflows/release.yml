@@ -47,6 +47,5 @@ jobs:
         with:
           tag_name: v${{ steps.version.outputs.APP_VERSION }}
           name: v${{ steps.version.outputs.APP_VERSION }}
-          generate_release_notes: false
-          body_path: CHANGELOG.md
+          generate_release_notes: true
           files: ArtifactLens.zip
