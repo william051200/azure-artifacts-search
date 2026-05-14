@@ -4,9 +4,22 @@ Search across Azure DevOps Artifacts feeds for packages by version.
 
 ## Installation
 
-### Option A — Download the pre-built executable (recommended)
+### Option A — One-line PowerShell install (recommended)
 
-1. Go to the [latest release](https://github.com/william051200/ArtifactLens/releases/latest) (currently [v1.0.0](https://github.com/william051200/ArtifactLens/releases/tag/v1.0.0))
+Open **PowerShell** and paste:
+
+```powershell
+irm https://raw.githubusercontent.com/william051200/ArtifactLens/main/scripts/install.ps1 | iex
+```
+
+This downloads the latest release, extracts it to
+`%LOCALAPPDATA%\Programs\ArtifactLens`, and creates Start Menu + Desktop
+shortcuts. No admin rights required. Re-run the same command any time to
+upgrade.
+
+### Option B — Download the pre-built executable
+
+1. Go to the [latest release](https://github.com/william051200/ArtifactLens/releases/latest)
 2. Under **Assets**, download **`ArtifactLens.zip`**
 3. Right-click the downloaded zip → **Properties** → check **Unblock** (if shown) → **OK**
 4. Extract the zip to any folder (e.g. `C:\Tools\ArtifactLens\`)
@@ -14,7 +27,7 @@ Search across Azure DevOps Artifacts feeds for packages by version.
 
 > 💡 **Tip:** Pin `ArtifactLens.exe` to your Start menu or taskbar for quick access.
 
-### Option B — Run from source (requires [Python](https://www.python.org/downloads/))
+### Option C — Run from source (requires [Python](https://www.python.org/downloads/))
 
 ```bash
 git clone https://github.com/william051200/ArtifactLens.git
@@ -23,7 +36,7 @@ cd ArtifactLens
 
 Double-click **`scripts/run.bat`** — it installs dependencies and launches the app automatically.
 
-### Option C — Build the executable yourself
+### Option D — Build the executable yourself
 
 1. Double-click **`scripts/build.bat`** (requires Python for the one-time build)
 2. Find the output at `dist\ArtifactLens\ArtifactLens.exe`
@@ -35,6 +48,17 @@ Double-click **`scripts/run.bat`** — it installs dependencies and launches the
 2. Fill in your **Organization** and **Project** name from Azure DevOps
 3. For private feeds, enter your **Personal Access Token (PAT)**
 4. Click **Save** — settings are stored locally in a `.env` file
+
+## Updates
+
+ArtifactLens checks GitHub for new releases on startup and once per hour
+afterwards. When a newer version is available, the version tag and an
+**Update** button appear in the top navigation bar:
+
+- **Click the version tag** to open the release notes on GitHub.
+- **Click Update** to download and install the latest version automatically;
+  the app closes, the installer overwrites it in place, and ArtifactLens
+  re-launches when it's done.
 
 ## Usage
 

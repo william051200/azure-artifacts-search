@@ -19,15 +19,16 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt pyinstaller
 
-      - name: Read version from config
+      - name: Read version from VERSION file
         id: version
         run: |
-          $ver = python -c "from artifactlens.config import APP_VERSION; print(APP_VERSION)"
+          $ver = (Get-Content VERSION -Raw).Trim()
           echo "APP_VERSION=$ver" >> $env:GITHUB_OUTPUT
 
       - name: Build executable
         run: >
           pyinstaller --onedir --noconsole --name ArtifactLens
+          --add-data "VERSION;."
           --hidden-import=artifactlens
           --hidden-import=artifactlens.app
           --hidden-import=artifactlens.api

@@ -3,6 +3,7 @@ echo Installing build dependencies...
 pip install -q pyinstaller -r requirements.txt
 echo Building executable...
 pyinstaller --onedir --noconsole --name ArtifactLens ^
+    --add-data "VERSION;." ^
     --hidden-import=artifactlens ^
     --hidden-import=artifactlens.app ^
     --hidden-import=artifactlens.api ^

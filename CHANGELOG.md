@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.1.0 — 2026-05-14
+
+### Features
+
+- **One-line PowerShell installer** — `irm https://raw.githubusercontent.com/william051200/ArtifactLens/main/scripts/install.ps1 | iex` downloads the latest release, extracts it to `%LOCALAPPDATA%\Programs\ArtifactLens`, and creates Start Menu + Desktop shortcuts. No admin rights required.
+- **In-app update checker** — On startup and every hour, ArtifactLens checks GitHub for a newer release (always enabled). When one is found, the new version tag and an **Update** button appear in the top navigation bar.
+- **One-click upgrade** — Clicking **Update** runs the installer non-interactively, replaces the existing install, and re-launches the app. Clicking the version tag opens the release notes on GitHub.
+
+---
+
 ## v1.0.0 — 2026-04-27
 
 ### Features

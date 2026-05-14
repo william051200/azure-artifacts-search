@@ -29,6 +29,7 @@ from artifactlens.theme import (
 )
 from artifactlens.api import is_build_specific_feed, get_feeds, search_feed_for_version
 from artifactlens.settings_dialog import open_settings
+from artifactlens.updater import ReleaseInfo, UpdateChecker, trigger_upgrade
 
 
 @dataclass
@@ -76,6 +77,7 @@ class ArtifactLensApp(tk.Tk):
         self._build_ui()
         self._center_window()
         self._prefetch_feeds()
+        self._start_update_checker()
 
     # ── UI Construction ──
 
@@ -114,6 +116,21 @@ class ArtifactLensApp(tk.Tk):
             command=lambda: open_settings(self),
         )
         self.config_btn.pack(side="right", padx=20)
+
+        # Update affordances — hidden until a newer release is detected.
+        self.update_btn = tk.Button(
+            nav, text="Update", font=FONT_SANS_SM,
+            bg=TERRACOTTA, fg=IVORY, relief="flat",
+            activebackground=CORAL, activeforeground=IVORY,
+            cursor="hand2", padx=10, pady=2,
+            command=self._on_update_clicked,
+        )
+        self.update_version_label = tk.Label(
+            nav, text="", font=FONT_SANS_SM,
+            bg=NEAR_BLACK, fg=TERRACOTTA, cursor="hand2",
+        )
+        self.update_version_label.bind("<Button-1>", self._on_update_version_clicked)
+        self._latest_release: ReleaseInfo | None = None
 
         self.nav_label = tk.Label(
             nav, text=f"{self.org} / {self.project}", font=FONT_MONO,
@@ -489,6 +506,36 @@ class ArtifactLensApp(tk.Tk):
                 session.close()
 
         threading.Thread(target=_fetch, daemon=True).start()
+
+    # ── Update checker ──
+
+    def _start_update_checker(self):
+        """Start the background GitHub release poller (silent on failure)."""
+        self._update_checker = UpdateChecker(
+            on_update_available=lambda info: self.after(0, self._show_update_available, info),
+        )
+        self._update_checker.start()
+
+    def _show_update_available(self, info: ReleaseInfo) -> None:
+        """Reveal the version label + Update button in the nav bar."""
+        self._latest_release = info
+        self.update_version_label.config(text=info.tag)
+        # Insert just before the Settings button so the order reads:
+        # [version] [Update] [Settings]
+        self.update_version_label.pack(side="right", padx=(0, 8), before=self.config_btn)
+        self.update_btn.pack(side="right", padx=(0, 8), before=self.config_btn)
+
+    def _on_update_version_clicked(self, _event=None):
+        if self._latest_release:
+            webbrowser.open(self._latest_release.html_url)
+
+    def _on_update_clicked(self):
+        try:
+            trigger_upgrade()
+        except Exception as e:
+            self._log(f"Failed to launch installer: {e}", "warn")
+            return
+        self.destroy()
 
     def _set_inputs_state(self, state: str):
         """Enable or disable all input fields."""
