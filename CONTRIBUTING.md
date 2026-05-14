@@ -40,8 +40,8 @@ PRs cannot be merged until CI passes.
 
 ```bash
 # Clone the repo
-git clone https://github.com/william051200/azure-artifacts-search.git
-cd azure-artifacts-search
+git clone https://github.com/william051200/ArtifactLens.git
+cd ArtifactLens
 
 # Create a virtual environment
 python -m venv venv
@@ -54,7 +54,7 @@ pip install -r requirements.txt
 ## Running the App
 
 ```bash
-python -m search_artifact_app
+python -m artifactlens
 ```
 
 ## Building the Executable

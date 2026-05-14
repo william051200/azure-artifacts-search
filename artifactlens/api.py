@@ -3,7 +3,7 @@
 import re
 import requests
 
-from search_artifact_app.config import API_VERSION
+from artifactlens.config import API_VERSION
 
 
 def is_build_specific_feed(name: str) -> bool:

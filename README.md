@@ -6,14 +6,19 @@ Search across Azure DevOps Artifacts feeds for packages by version.
 
 ### Option A — Download the pre-built executable (recommended)
 
-1. Get the latest `ArtifactLens` folder from the `dist/` directory or your team's shared location
-2. Run `ArtifactLens.exe` — no Python or other dependencies required
+1. Go to the [latest release](https://github.com/william051200/ArtifactLens/releases/latest) (currently [v1.0.0](https://github.com/william051200/ArtifactLens/releases/tag/v1.0.0))
+2. Under **Assets**, download **`ArtifactLens.zip`**
+3. Right-click the downloaded zip → **Properties** → check **Unblock** (if shown) → **OK**
+4. Extract the zip to any folder (e.g. `C:\Tools\ArtifactLens\`)
+5. Run **`ArtifactLens.exe`** from the extracted folder — no Python or other dependencies required
+
+> 💡 **Tip:** Pin `ArtifactLens.exe` to your Start menu or taskbar for quick access.
 
 ### Option B — Run from source (requires [Python](https://www.python.org/downloads/))
 
 ```bash
-git clone https://github.com/william051200/azure-artifacts-search.git
-cd azure-artifacts-search
+git clone https://github.com/william051200/ArtifactLens.git
+cd ArtifactLens
 ```
 
 Double-click **`scripts/run.bat`** — it installs dependencies and launches the app automatically.

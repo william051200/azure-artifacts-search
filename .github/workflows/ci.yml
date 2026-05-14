@@ -22,26 +22,26 @@ jobs:
 
       - name: Syntax check
         run: |
-          python -m py_compile search_artifact_app/config.py
-          python -m py_compile search_artifact_app/api.py
-          python -m py_compile search_artifact_app/app.py
-          python -m py_compile search_artifact_app/theme.py
-          python -m py_compile search_artifact_app/settings_dialog.py
-          python -m py_compile search_artifact_app/__main__.py
+          python -m py_compile artifactlens/config.py
+          python -m py_compile artifactlens/api.py
+          python -m py_compile artifactlens/app.py
+          python -m py_compile artifactlens/theme.py
+          python -m py_compile artifactlens/settings_dialog.py
+          python -m py_compile artifactlens/__main__.py
 
       - name: Import validation
-        run: python -c "from search_artifact_app.app import ArtifactSearchApp; print('All imports OK')"
+        run: python -c "from artifactlens.app import ArtifactLensApp; print('All imports OK')"
 
       - name: Build executable
         run: >
           pyinstaller --onedir --noconsole --name ArtifactLens
-          --hidden-import=search_artifact_app
-          --hidden-import=search_artifact_app.app
-          --hidden-import=search_artifact_app.api
-          --hidden-import=search_artifact_app.config
-          --hidden-import=search_artifact_app.theme
-          --hidden-import=search_artifact_app.settings_dialog
-          search_artifact_app/__main__.py
+          --hidden-import=artifactlens
+          --hidden-import=artifactlens.app
+          --hidden-import=artifactlens.api
+          --hidden-import=artifactlens.config
+          --hidden-import=artifactlens.theme
+          --hidden-import=artifactlens.settings_dialog
+          artifactlens/__main__.py
 
       - name: Verify build output
         run: Test-Path dist/ArtifactLens/ArtifactLens.exe

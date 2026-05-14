@@ -3,7 +3,7 @@
 import os
 import tkinter as tk
 
-from search_artifact_app.theme import (
+from artifactlens.theme import (
     PARCHMENT, IVORY, WHITE, WARM_SAND, NEAR_BLACK,
     TERRACOTTA, CORAL, CHARCOAL_WARM, OLIVE_GRAY, STONE_GRAY,
     BORDER_WARM,

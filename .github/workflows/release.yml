@@ -22,19 +22,19 @@ jobs:
       - name: Read version from config
         id: version
         run: |
-          $ver = python -c "from search_artifact_app.config import APP_VERSION; print(APP_VERSION)"
+          $ver = python -c "from artifactlens.config import APP_VERSION; print(APP_VERSION)"
           echo "APP_VERSION=$ver" >> $env:GITHUB_OUTPUT
 
       - name: Build executable
         run: >
           pyinstaller --onedir --noconsole --name ArtifactLens
-          --hidden-import=search_artifact_app
-          --hidden-import=search_artifact_app.app
-          --hidden-import=search_artifact_app.api
-          --hidden-import=search_artifact_app.config
-          --hidden-import=search_artifact_app.theme
-          --hidden-import=search_artifact_app.settings_dialog
-          search_artifact_app/__main__.py
+          --hidden-import=artifactlens
+          --hidden-import=artifactlens.app
+          --hidden-import=artifactlens.api
+          --hidden-import=artifactlens.config
+          --hidden-import=artifactlens.theme
+          --hidden-import=artifactlens.settings_dialog
+          artifactlens/__main__.py
 
       - name: Verify build output
         run: Test-Path dist/ArtifactLens/ArtifactLens.exe

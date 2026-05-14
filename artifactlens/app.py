@@ -13,13 +13,13 @@ import tkinter as tk
 import requests
 from dotenv import load_dotenv
 
-from search_artifact_app.config import (
+from artifactlens.config import (
     API_VERSION,
     build_base_url, build_artifact_url, build_feed_url, build_nuget_source_xml, PROTOCOL_TYPE_MAP,
     DEFAULT_THREADS, DEFAULT_PLATFORM, PLATFORM_OPTIONS,
     WINDOW_SIZE, WINDOW_MIN_SIZE, APP_VERSION, MAX_THREADS,
 )
-from search_artifact_app.theme import (
+from artifactlens.theme import (
     PARCHMENT, IVORY, WHITE, WARM_SAND, NEAR_BLACK, DARK_SURFACE,
     TERRACOTTA, CORAL, CHARCOAL_WARM, OLIVE_GRAY, STONE_GRAY,
     WARM_SILVER, BORDER_CREAM, BORDER_WARM, ERROR_RED,
@@ -27,8 +27,8 @@ from search_artifact_app.theme import (
     FONT_SANS_LG, FONT_SANS_LABEL, FONT_SANS_LABEL_BOLD, FONT_SANS_BTN,
     FONT_MONO,
 )
-from search_artifact_app.api import is_build_specific_feed, get_feeds, search_feed_for_version
-from search_artifact_app.settings_dialog import open_settings
+from artifactlens.api import is_build_specific_feed, get_feeds, search_feed_for_version
+from artifactlens.settings_dialog import open_settings
 
 
 @dataclass
@@ -47,7 +47,7 @@ class SearchParams:
     max_workers: int
 
 
-class ArtifactSearchApp(tk.Tk):
+class ArtifactLensApp(tk.Tk):
     def __init__(self):
         super().__init__()
         self.title("ArtifactLens")
